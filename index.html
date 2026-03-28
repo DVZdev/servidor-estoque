@@ -71,6 +71,8 @@
         .item-produto { background: white; border: 1px solid var(--border); padding: 15px; border-radius: 16px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
         .alerta { border-left: 5px solid var(--danger); }
 
+        .btn-excluir-item { color: var(--danger); font-weight: 800; cursor: pointer; border: none; background: none; padding: 5px 10px; font-size: 18px; }
+
         .hist-item { background: #f8fafc; padding: 12px; border-radius: 12px; margin-bottom: 8px; font-size: 13px; border-left: 4px solid var(--primary); }
     </style>
 </head>
@@ -120,6 +122,7 @@
                             <button class="btn btn-success" onclick="lancar('ENTRADA')">Entrada</button>
                             <button class="btn btn-primary" onclick="addAoCarrinho()">+ Adicionar ao Pedido</button>
                             <button class="btn btn-clear" onclick="limparCampos()">Limpar Campos</button>
+                            <button class="btn btn-clear" style="background:#ef4444; color:white" onclick="limparEstoqueTotal()">Limpar Todo Estoque</button>
                             <label class="btn btn-ghost" style="font-size:12px">📥 Excel <input type="file" style="display:none" onchange="importarMassa(this)"></label>
                         </div>
                     </div>
@@ -170,9 +173,27 @@
             document.getElementById('corpo-estoque-lista').innerHTML = estoque.map(p => `
                 <div class="item-produto ${p.qtd <= (p.min || 0) ? 'alerta' : ''}" data-busca="${p.cod} ${p.nome}">
                     <div><b>${p.nome}</b><br><small>COD: ${p.cod}</small></div>
-                    <div style="text-align:right"><b>${p.qtd}</b> un<br><small>Mín: ${p.min || 0}</small></div>
+                    <div style="display:flex; align-items:center; gap:15px">
+                        <div style="text-align:right"><b>${p.qtd}</b> un<br><small>Mín: ${p.min || 0}</small></div>
+                        ${userAtivo && userAtivo.isadmin ? `<button class="btn-excluir-item" onclick="excluirProduto('${p.cod}')">×</button>` : ''}
+                    </div>
                 </div>
             `).join('');
+        }
+
+        async function excluirProduto(cod) {
+            if(!confirm("Deseja excluir este produto definitivamente?")) return;
+            await fetch(`${API}/estoque/${cod}`, { method: 'DELETE' });
+            carregar();
+        }
+
+        async function limparEstoqueTotal() {
+            if(!confirm("ATENÇÃO: Isso apagará TODOS os produtos do estoque. Confirma?")) return;
+            // Deletar um por um (ou endpoint de bulk delete se existir)
+            for(let p of estoque) {
+                await fetch(`${API}/estoque/${p.cod}`, { method: 'DELETE' });
+            }
+            carregar();
         }
 
         function addAoCarrinho() {
