@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Expedição v35</title>
+    <title>Sistema de Expedição v36</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -13,61 +13,47 @@
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; }
         .hidden { display: none !important; }
         
-        /* Tradutor no Topo */
         #google_translate_element { margin-bottom: 15px; text-align: right; }
         
         .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
         
-        /* LAYOUT VERTICAL: Cada campo ocupando sua própria linha */
-        .area-lancamento { display: flex; flex-direction: column; gap: 15px; max-width: 500px; margin-bottom: 25px; }
-        .campo-grupo { display: flex; flex-direction: column; gap: 5px; }
-        .campo-grupo label { font-size: 14px; font-weight: 800; color: #334155; text-transform: uppercase; }
+        /* Layout Vertical solicitado */
+        .area-lancamento { display: flex; flex-direction: column; gap: 12px; max-width: 450px; margin-bottom: 20px; }
+        .campo-grupo { display: flex; flex-direction: column; gap: 4px; }
+        .campo-grupo label { font-size: 13px; font-weight: 800; color: #475569; text-transform: uppercase; }
         
-        input { padding: 14px; border: 2px solid #cbd5e1; border-radius: 8px; font-size: 15px; width: 100%; box-sizing: border-box; }
-        input:focus { border-color: var(--accent); outline: none; }
-        
-        .botoes-linha { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+        input { padding: 12px; border: 2px solid #cbd5e1; border-radius: 8px; font-size: 14px; width: 100%; box-sizing: border-box; }
         button { padding: 12px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 700; color: white; background: var(--accent); }
         
         .nav { display: flex; justify-content: space-between; align-items: center; background: var(--primary); color: white; padding: 15px 25px; border-radius: 12px; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; }
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid #f1f5f9; }
-        th { background: #f8fafc; color: #64748b; font-size: 12px; text-transform: uppercase; }
-
-        @media (max-width: 600px) { .area-lancamento { max-width: 100%; } }
+        th { background: #f8fafc; color: #64748b; font-size: 12px; }
     </style>
 </head>
 <body>
 
     <div id="google_translate_element"></div>
-    <script type="text/javascript">
-        function googleTranslateElementInit() {
-            new google.translate.TranslateElement({pageLanguage: 'pt', layout: google.translate.TranslateElement.InlineLayout.SIMPLE}, 'google_translate_element');
-        }
-    </script>
-    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
     <div id="tela-login">
-        <div class="card" style="max-width: 400px; margin: 60px auto; border-top: 6px solid var(--accent);">
-            <h2 style="text-align:center">Acesso ao Sistema</h2>
+        <div class="card" style="max-width: 400px; margin: 60px auto;">
+            <h2 style="text-align:center">Acesso</h2>
             <div class="campo-grupo">
                 <label>Usuário</label>
-                <input type="text" id="user" placeholder="Seu nome">
+                <input type="text" id="user">
             </div>
-            <div class="campo-grupo" style="margin-top:15px;">
+            <div class="campo-grupo" style="margin-top:10px">
                 <label>Senha</label>
-                <input type="password" id="pass" placeholder="Sua senha">
+                <input type="password" id="pass">
             </div>
-            <div class="botoes-linha" style="margin-top:20px;">
-                <button onclick="autenticar('login')" style="flex:1">Entrar</button>
-                <button onclick="autenticar('register')" style="flex:1; background:var(--success)">Registrar</button>
-            </div>
+            <button onclick="autenticar('login')" style="width:100%; margin-top:20px">Entrar</button>
+            <button onclick="autenticar('register')" style="width:100%; margin-top:10px; background:var(--success)">Registrar</button>
         </div>
     </div>
 
     <div id="painel" class="hidden">
         <div class="nav">
-            <div>📦 <b>Expedição Digital</b> | <span id="nome-exibir"></span></div>
+            <div>📦 <b>Expedição</b> | <span id="nome-exibir"></span></div>
             <div style="display:flex; gap:10px">
                 <button onclick="aba('estoque')">Estoque</button>
                 <button id="btn-hist-nav" class="hidden" onclick="aba('hist')">Histórico</button>
@@ -76,55 +62,45 @@
         </div>
 
         <div id="aba-estoque" class="card">
-            <div id="area-admin" class="hidden" style="border-bottom: 2px solid #f1f5f9; padding-bottom: 30px; margin-bottom: 30px;">
-                <h3 style="margin-top:0">⚙️ Lançamento de Itens (Admin)</h3>
+            <div id="area-admin" class="hidden" style="border-bottom: 2px solid #f1f5f9; padding-bottom: 25px; margin-bottom: 25px;">
+                <h3 style="margin-top:0">⚙️ Lançamento Vertical</h3>
                 
                 <div class="area-lancamento">
                     <div class="campo-grupo">
-                        <label>Código do Produto</label>
-                        <input type="text" id="p-cod" placeholder="Ex: 1234" oninput="buscaAuto(this.value)">
+                        <label>Código</label>
+                        <input type="text" id="p-cod" oninput="buscaAuto(this.value)">
                     </div>
                     <div class="campo-grupo">
-                        <label>Nome do Produto</label>
-                        <input type="text" id="p-nome" placeholder="Ex: Garrafa G">
+                        <label>Nome</label>
+                        <input type="text" id="p-nome">
                     </div>
                     <div class="campo-grupo">
-                        <label>Quantidade Atual</label>
+                        <label>Quantidade</label>
                         <input type="number" id="p-qtd" value="1">
                     </div>
                     <div class="campo-grupo">
-                        <label>Estoque Mínimo</label>
+                        <label>Mínimo</label>
                         <input type="number" id="p-min" value="5">
                     </div>
                 </div>
 
-                <div class="botoes-linha">
-                    <button onclick="lancar('ENTRADA')" style="background:var(--success)">➕ Lançar Entrada</button>
-                    <button onclick="addCarrinho()">📝 Preparar Saída</button>
-                    <label style="background:#157347; color:white; padding:12px 18px; border-radius:8px; cursor:pointer; font-weight:700; font-size:14px;">
+                <div style="display:flex; gap:10px; flex-wrap: wrap;">
+                    <button onclick="lancar('ENTRADA')" style="background:var(--success)">Lançar Entrada</button>
+                    <button onclick="addCarrinho()">Add Saída</button>
+                    <label style="background:#157347; color:white; padding:12px; border-radius:8px; cursor:pointer; font-weight:700;">
                         📥 Importar Excel
                         <input type="file" accept=".xlsx" style="display:none" onchange="importarMassa(this)">
                     </label>
-                    <button onclick="limparEstoqueTodo()" style="background:var(--danger)">🗑️ Limpar Estoque Inteiro</button>
+                    <button onclick="limparEstoqueTodo()" style="background:var(--danger)">Limpar Tudo</button>
                 </div>
-            </div>
-
-            <div id="box-saida" class="hidden" style="background:#fffbeb; padding:25px; border-radius:12px; border: 1px solid #fef3c7; margin-bottom:30px;">
-                <h4 style="margin-top:0">📋 Lista para Saída</h4>
-                <div id="itens-lista" style="margin-bottom:20px; font-weight:600; color:#92400e"></div>
-                <div class="campo-grupo">
-                    <label>Destino / Cliente</label>
-                    <input type="text" id="destino" placeholder="Para onde vai?">
-                </div>
-                <button onclick="finalizarSaida()" style="width:100%; background:var(--danger); margin-top:20px">Gerar PDF e Finalizar</button>
             </div>
 
             <h3>📊 Inventário Geral</h3>
-            <input type="text" placeholder="Pesquisar por nome ou código..." onkeyup="filtrarTabela(this.value)" style="margin-bottom:20px; border-width: 2px;">
+            <input type="text" placeholder="Pesquisar..." onkeyup="filtrarTabela(this.value)" style="margin-bottom:20px;">
             <div style="overflow-x: auto;">
                 <table>
                     <thead>
-                        <tr><th>Cód</th><th>Produto</th><th>Qtd Atual</th><th>Mín</th><th>Gerenciar</th></tr>
+                        <tr><th>Cód</th><th>Produto</th><th>Qtd Atual</th><th>Mín</th><th>Ações</th></tr>
                     </thead>
                     <tbody id="corpo-estoque"></tbody>
                 </table>
@@ -132,18 +108,19 @@
         </div>
 
         <div id="aba-hist" class="card hidden">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
-                <h3>🕒 Histórico de Movimentações</h3>
-                <button onclick="exportarExcel()" style="background:#157347">📗 Exportar Excel</button>
-            </div>
             <table id="tab-hist-full">
-                <thead>
-                    <tr><th>Data</th><th>Tipo</th><th>Item</th><th>Qtd</th><th>Usuário</th></tr>
-                </thead>
+                <thead><tr><th>Data</th><th>Tipo</th><th>Item</th><th>Qtd</th><th>Usuário</th></tr></thead>
                 <tbody id="corpo-hist"></tbody>
             </table>
         </div>
     </div>
+
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({pageLanguage: 'pt', layout: google.translate.TranslateElement.InlineLayout.SIMPLE}, 'google_translate_element');
+        }
+    </script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
     <script>
         const API = 'https://servidor-estoque-8g56.onrender.com';
@@ -152,7 +129,7 @@
         async function autenticar(modo) {
             const u = document.getElementById('user').value.trim();
             const p = document.getElementById('pass').value;
-            if(!u || !p) return alert("Preencha os campos!");
+            if(!u || !p) return alert("Preencha!");
             try {
                 const res = await fetch(`${API}/auth/${modo}`, {
                     method: 'POST',
@@ -169,8 +146,8 @@
                         document.getElementById('btn-hist-nav').classList.remove('hidden');
                     }
                     carregar();
-                } else alert("Credenciais inválidas.");
-            } catch(e) { alert("Erro de conexão."); }
+                } else alert("Erro!");
+            } catch(e) { alert("Conexão falhou!"); }
         }
 
         async function carregar() {
@@ -181,13 +158,14 @@
 
         function render() {
             const corpo = document.getElementById('corpo-estoque');
+            // Aqui garantimos que cada item do estoque vire uma linha (tr) na tabela
             corpo.innerHTML = estoque.map(p => `
                 <tr style="${p.qtd <= p.min ? 'background:#fff1f2; color:#be123c' : ''}">
                     <td>${p.cod}</td>
                     <td>${p.nome}</td>
                     <td><b>${p.qtd}</b></td>
                     <td>${p.min}</td>
-                    <td>${userAtivo.isadmin ? `<button onclick="apagar('${p.cod}')" style="background:var(--danger); padding:6px 12px; font-size:11px">Remover</button>` : '-'}</td>
+                    <td>${userAtivo.isadmin ? `<button onclick="apagar('${p.cod}')" style="background:var(--danger); padding:5px 10px; font-size:11px">Excluir</button>` : '-'}</td>
                 </tr>
             `).join('');
         }
@@ -199,6 +177,8 @@
                 qtd: parseInt(document.getElementById('p-qtd').value),
                 min: parseInt(document.getElementById('p-min').value) || 5
             };
+            if(!item.cod || !item.nome) return;
+
             const ex = estoque.find(x => x.cod == item.cod);
             let finalQtd = item.qtd;
             if(tipo === 'ENTRADA' && ex) finalQtd += ex.qtd;
@@ -206,66 +186,47 @@
 
             await fetch(`${API}/estoque`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({...item, qtd: finalQtd}) });
             await fetch(`${API}/historico`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod: item.cod, nome: item.nome, qtd: item.qtd, tipo_mov: tipo, usuario: userAtivo.u}) });
-            carregar();
+            await carregar();
         }
 
-        async function limparEstoqueTodo() {
-            if(confirm("ATENÇÃO: Isso apagará TODOS os itens. Confirmar?")) {
-                for(let p of estoque) await fetch(`${API}/estoque/${p.cod}`, {method:'DELETE'});
-                alert("Estoque limpo!"); carregar();
-            }
-        }
-
-        function importarMassa(input) {
+        async function importarMassa(input) {
             const r = new FileReader();
             r.onload = async (e) => {
-                const wb = XLSX.read(new Uint8Array(e.target.result), {type: 'array'});
+                const data = new Uint8Array(e.target.result);
+                const wb = XLSX.read(data, {type: 'array'});
+                // range: 1 pula o cabeçalho. header: determina a ordem das colunas
                 const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: ["cod", "nome", "qtd", "min"], range: 1});
-                for(let f of rows) {
-                    if(f.cod && f.nome) await lancar('ENTRADA', { cod: f.cod.toString(), nome: f.nome, qtd: parseInt(f.qtd) || 0, min: parseInt(f.min) || 5 });
+                
+                // Processa um por um para garantir que fiquem separados no banco
+                for(const f of rows) {
+                    if(f.cod && f.nome) {
+                        await lancar('ENTRADA', {
+                            cod: f.cod.toString(),
+                            nome: f.nome.toString(),
+                            qtd: parseInt(f.qtd) || 0,
+                            min: parseInt(f.min) || 5
+                        });
+                    }
                 }
-                alert("Importado com sucesso!"); carregar();
+                alert("Importação finalizada!");
             };
             r.readAsArrayBuffer(input.files[0]);
         }
 
-        function addCarrinho() {
-            const cod = document.getElementById('p-cod').value;
-            const p = estoque.find(x => x.cod == cod);
-            const q = parseInt(document.getElementById('p-qtd').value);
-            if(!p || p.qtd < q) return alert("Estoque insuficiente!");
-            carrinho.push({cod: p.cod, nome: p.nome, qtd: q});
-            document.getElementById('box-saida').classList.remove('hidden');
-            document.getElementById('itens-lista').innerHTML = carrinho.map(i => `• ${i.qtd}x ${i.nome}`).join('<br>');
-        }
-
-        async function finalizarSaida() {
-            const d = document.getElementById('destino').value;
-            if(!d || carrinho.length === 0) return alert("Preencha o destino!");
-            for(let it of carrinho) await lancar('SAÍDA', it);
-            const doc = new jspdf.jsPDF();
-            doc.text("GUIA DE EXPEDIÇÃO - DESTINO: " + d.toUpperCase(), 10, 10);
-            doc.autoTable({ head: [['Item', 'Qtd']], body: carrinho.map(x => [x.nome, x.qtd]) });
-            doc.save(`saida.pdf`);
-            carrinho = []; document.getElementById('box-saida').classList.add('hidden');
-            carregar();
+        async function limparEstoqueTodo() {
+            if(confirm("Apagar tudo?")) {
+                for(let p of estoque) await fetch(`${API}/estoque/${p.cod}`, {method:'DELETE'});
+                carregar();
+            }
         }
 
         function aba(t) {
             document.getElementById('aba-estoque').classList.toggle('hidden', t !== 'estoque');
             document.getElementById('aba-hist').classList.toggle('hidden', t !== 'hist');
-            if(t === 'hist') carregarHist();
         }
 
-        async function carregarHist() {
-            const res = await fetch(`${API}/historico`);
-            const h = await res.json();
-            document.getElementById('corpo-hist').innerHTML = h.map(x => `<tr><td>${new Date(x.data).toLocaleString()}</td><td>${x.tipo_mov}</td><td>${x.nome}</td><td>${x.qtd}</td><td>${x.usuario}</td></tr>`).join('');
-        }
-
-        async function apagar(c) { if(confirm("Remover este item?")) { await fetch(`${API}/estoque/${c}`, {method:'DELETE'}); carregar(); } }
+        async function apagar(c) { if(confirm("Remover?")) { await fetch(`${API}/estoque/${c}`, {method:'DELETE'}); carregar(); } }
         function buscaAuto(c) { const p = estoque.find(x => x.cod == c.trim()); if(p) { document.getElementById('p-nome').value = p.nome; document.getElementById('p-min').value = p.min; } }
-        function exportarExcel() { XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById('tab-hist-full')), "historico_expedicao.xlsx"); }
         function filtrarTabela(v) { 
             const termo = v.toLowerCase();
             const linhas = document.querySelectorAll("#corpo-estoque tr");
