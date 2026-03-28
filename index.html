@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Expedição v31</title>
+    <title>Sistema de Expedição v32</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -17,8 +17,9 @@
         
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
         
-        .campo-grupo { display: flex; flex-direction: column; gap: 4px; width: 100%; }
-        .campo-grupo label { font-size: 13px; font-weight: 700; color: #475569; margin-left: 2px; }
+        /* Ajuste para que a etiqueta fique grudada no input */
+        .campo-unidade { display: flex; flex-direction: column; gap: 4px; }
+        .campo-unidade label { font-size: 12px; font-weight: 700; color: #475569; }
         
         input { padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; width: 100%; box-sizing: border-box; font-size: 14px; }
         button { padding: 12px 18px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; color: white; background: var(--accent); transition: 0.2s; }
@@ -26,9 +27,16 @@
         .nav { display: flex; justify-content: space-between; align-items: center; background: var(--primary); color: white; padding: 15px 20px; border-radius: 10px; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
-        .alert-min { color: var(--danger); font-weight: bold; background: #fff1f2; }
         
-        .grid-admin { display: grid; grid-template-columns: 1fr 2fr 1fr 1fr; gap: 12px; margin-bottom: 15px; }
+        /* Grid para manter tudo na mesma linha com rótulos em cima */
+        .grid-admin { 
+            display: grid; 
+            grid-template-columns: 1fr 2fr 1fr 1fr; 
+            gap: 15px; 
+            margin-bottom: 20px; 
+            align-items: end; 
+        }
+        
         @media (max-width: 768px) { .grid-admin { grid-template-columns: 1fr; } }
     </style>
 </head>
@@ -39,13 +47,13 @@
     <div id="tela-login">
         <div class="card" style="max-width: 380px; margin: 60px auto; border-top: 5px solid var(--accent);">
             <h2 style="text-align:center">Acesso ao Sistema</h2>
-            <div class="campo-grupo">
+            <div class="campo-unidade">
                 <label>Usuário</label>
-                <input type="text" id="user" placeholder="Digite seu nome">
+                <input type="text" id="user" placeholder="Seu nome">
             </div>
-            <div class="campo-grupo" style="margin-top:10px;">
+            <div class="campo-unidade" style="margin-top:10px;">
                 <label>Senha</label>
-                <input type="password" id="pass" placeholder="Digite sua senha">
+                <input type="password" id="pass" placeholder="Sua senha">
             </div>
             <div style="display:flex; gap:10px; margin-top:20px;">
                 <button onclick="autenticar('login')" style="flex:1">Entrar</button>
@@ -65,24 +73,24 @@
         </div>
 
         <div id="aba-estoque" class="card">
-            <div id="area-admin" class="hidden" style="margin-bottom: 25px; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px;">
+            <div id="area-admin" class="hidden" style="margin-bottom: 25px; border-bottom: 2px solid #f1f5f9; padding-bottom: 25px;">
                 <h3 style="margin-top:0">⚙️ Painel de Controle (Admin)</h3>
                 
                 <div class="grid-admin">
-                    <div class="campo-grupo">
-                        <label>Código do Produto</label>
+                    <div class="campo-unidade">
+                        <label>Código</label>
                         <input type="text" id="p-cod" placeholder="Ex: 1234" oninput="buscaAuto(this.value)">
                     </div>
-                    <div class="campo-grupo">
+                    <div class="campo-unidade">
                         <label>Nome do Produto</label>
-                        <input type="text" id="p-nome" placeholder="Ex: Caneta">
+                        <input type="text" id="p-nome" placeholder="Ex: Garrafa">
                     </div>
-                    <div class="campo-grupo">
+                    <div class="campo-unidade">
                         <label>Quantidade</label>
                         <input type="number" id="p-qtd" value="1">
                     </div>
-                    <div class="campo-grupo">
-                        <label>Estoque Mínimo</label>
+                    <div class="campo-unidade">
+                        <label>Mínimo</label>
                         <input type="number" id="p-min" value="5">
                     </div>
                 </div>
@@ -101,9 +109,9 @@
             <div id="box-saida" class="hidden" style="background:#fefce8; padding:20px; border-radius:10px; border: 1px solid #fef08a; margin-bottom:20px;">
                 <h4 style="margin-top:0">📋 Carrinho de Saída</h4>
                 <div id="itens-lista" style="margin-bottom:15px"></div>
-                <div class="campo-grupo">
+                <div class="campo-unidade">
                     <label>Destino Final</label>
-                    <input type="text" id="destino" placeholder="Ex: Setor A ou Cliente">
+                    <input type="text" id="destino" placeholder="Para onde vai?">
                 </div>
                 <button onclick="finalizarSaida()" style="width:100%; background:var(--danger); margin-top:15px">Finalizar e Gerar PDF</button>
             </div>
@@ -156,7 +164,6 @@
                     body: JSON.stringify({u, p})
                 });
                 if(res.ok) {
-                    if(modo === 'register') return alert("Registrado!");
                     userAtivo = await res.json();
                     document.getElementById('tela-login').classList.add('hidden');
                     document.getElementById('painel').classList.remove('hidden');
@@ -167,7 +174,7 @@
                     }
                     carregar();
                 } else alert("Erro no Login.");
-            } catch(e) { alert("Erro de conexão!"); }
+            } catch(e) { alert("Conexão falhou!"); }
         }
 
         async function carregar() {
@@ -196,8 +203,6 @@
                 qtd: parseInt(document.getElementById('p-qtd').value),
                 min: parseInt(document.getElementById('p-min').value) || 5
             };
-            if(!item.cod || !item.nome) return alert("Código e Nome obrigatórios!");
-            
             const ex = estoque.find(x => x.cod == item.cod);
             let finalQtd = item.qtd;
             if(tipo === 'ENTRADA' && ex) finalQtd += ex.qtd;
@@ -209,37 +214,21 @@
         }
 
         async function limparEstoqueTodo() {
-            if(confirm("Deseja apagar TODO o estoque?")) {
-                if(confirm("Certeza absoluta?")) {
-                    for(let p of estoque) {
-                        await fetch(`${API}/estoque/${p.cod}`, {method:'DELETE'});
-                    }
-                    alert("Estoque limpo!");
-                    carregar();
-                }
+            if(confirm("Apagar tudo?")) {
+                for(let p of estoque) await fetch(`${API}/estoque/${p.cod}`, {method:'DELETE'});
+                carregar();
             }
         }
 
-        // IMPORTAÇÃO SEM CABEÇALHO (LÊ DIRETO OS DADOS)
         function importarMassa(input) {
             const r = new FileReader();
             r.onload = async (e) => {
                 const wb = XLSX.read(new Uint8Array(e.target.result), {type: 'array'});
-                // O parâmetro 'header: 1' transforma em array simples, 'range: 1' pula a primeira linha
                 const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: ["cod", "nome", "qtd", "min"], range: 1});
-                
                 for(let f of rows) {
-                    if(f.cod && f.nome) {
-                        await lancar('ENTRADA', { 
-                            cod: f.cod.toString(), 
-                            nome: f.nome, 
-                            qtd: parseInt(f.qtd) || 0, 
-                            min: parseInt(f.min) || 5 
-                        });
-                    }
+                    if(f.cod && f.nome) await lancar('ENTRADA', { cod: f.cod.toString(), nome: f.nome, qtd: parseInt(f.qtd) || 0, min: parseInt(f.min) || 5 });
                 }
-                alert("Importado com sucesso!");
-                carregar();
+                alert("Pronto!"); carregar();
             };
             r.readAsArrayBuffer(input.files[0]);
         }
@@ -248,7 +237,7 @@
             const cod = document.getElementById('p-cod').value;
             const p = estoque.find(x => x.cod == cod);
             const q = parseInt(document.getElementById('p-qtd').value);
-            if(!p || p.qtd < q) return alert("Estoque insuficiente!");
+            if(!p || p.qtd < q) return alert("Sem estoque!");
             carrinho.push({cod: p.cod, nome: p.nome, qtd: q});
             document.getElementById('box-saida').classList.remove('hidden');
             document.getElementById('itens-lista').innerHTML = carrinho.map(i => `<div>• ${i.qtd}x ${i.nome}</div>`).join('');
@@ -256,14 +245,14 @@
 
         async function finalizarSaida() {
             const d = document.getElementById('destino').value;
-            if(!d || carrinho.length === 0) return alert("Preencha o destino!");
+            if(!d || carrinho.length === 0) return alert("Falta o destino!");
             for(let it of carrinho) await lancar('SAÍDA', it);
             const doc = new jspdf.jsPDF();
-            doc.text("GUIA DE SAÍDA - DESTINO: " + d.toUpperCase(), 10, 10);
+            doc.text("GUIA DE SAÍDA - " + d.toUpperCase(), 10, 10);
             doc.autoTable({ head: [['Item', 'Qtd']], body: carrinho.map(x => [x.nome, x.qtd]) });
-            doc.save(`saida_${d}.pdf`);
+            doc.save(`saida.pdf`);
             carrinho = []; document.getElementById('box-saida').classList.add('hidden');
-            alert("Saída concluída!");
+            carregar();
         }
 
         function aba(t) {
@@ -278,9 +267,9 @@
             document.getElementById('corpo-hist').innerHTML = h.map(x => `<tr><td>${new Date(x.data).toLocaleString()}</td><td>${x.tipo_mov}</td><td>${x.nome}</td><td>${x.qtd}</td><td>${x.usuario}</td></tr>`).join('');
         }
 
-        async function apagar(c) { if(confirm("Remover permanentemente?")) { await fetch(`${API}/estoque/${c}`, {method:'DELETE'}); carregar(); } }
+        async function apagar(c) { if(confirm("Excluir?")) { await fetch(`${API}/estoque/${c}`, {method:'DELETE'}); carregar(); } }
         function buscaAuto(c) { const p = estoque.find(x => x.cod == c.trim()); if(p) { document.getElementById('p-nome').value = p.nome; document.getElementById('p-min').value = p.min; } }
-        function exportarExcel() { XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById('tab-hist-full')), "historico.xlsx"); }
+        function exportarExcel() { XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById('tab-hist-full')), "hist.xlsx"); }
         function filtrarTabela(v) { 
             const termo = v.toLowerCase();
             const linhas = document.querySelectorAll("#corpo-estoque tr");
