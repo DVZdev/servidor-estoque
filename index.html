@@ -43,15 +43,15 @@
             border: none; background: rgba(255, 255, 255, 0.9); outline: none;
         }
 
-        /* PAINEL INTERNO */
+        /* PAINEL INTERNO COM A NOVA IMAGEM TRANSPARENTE */
         #painel.ativo {
             min-height: 100vh;
-            background: linear-gradient(rgba(255,255,255,0.92), rgba(255,255,255,0.92)), 
-                        url('https://images.unsplash.com/photo-1605379399642-870262d3d051?q=80&w=1900&auto=format&fit=crop') no-repeat center center fixed;
+            background: linear-gradient(rgba(255,255,255,0.94), rgba(255,255,255,0.94)), 
+                        url('image_9c1118.png') no-repeat center center fixed;
             background-size: cover; padding: 20px;
         }
 
-        .container { max-width: 1100px; margin: 0 auto; }
+        .container { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
         .header-nav {
             display: flex; justify-content: space-between; align-items: center;
             background: white; padding: 15px 25px; border-radius: 20px;
