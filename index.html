@@ -23,7 +23,15 @@
             font-family: 'Inter', sans-serif; 
             margin: 0; 
             color: var(--text);
-            /* OPÇÃO 1 PARA A TELA INTERNA (com overlay para leitura) */
+            min-height: 100vh;
+            /* FUNDO PADRÃO (OPÇÃO 3 - LOGIN) */
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), 
+                        url('https://images.unsplash.com/photo-1579547621453-625d5d6c8e31?q=80&w=1900&auto=format&fit=crop') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        /* CLASSE PARA MUDAR O FUNDO APÓS LOGIN (OPÇÃO 1) */
+        body.logado {
             background: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), 
                         url('https://images.unsplash.com/photo-1605379399642-870262d3d051?q=80&w=1900&auto=format&fit=crop') no-repeat center center fixed;
             background-size: cover;
@@ -31,26 +39,20 @@
 
         .hidden { display: none !important; }
 
-        #google_translate_element { padding: 10px; text-align: right; background: rgba(248, 250, 252, 0.9); border-bottom: 1px solid var(--border); }
-
-        /* TELA DE LOGIN - OPÇÃO 3 */
+        /* LOGIN CARD */
         #tela-login {
             height: 100vh; display: flex; align-items: center; justify-content: center;
-            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), 
-                        url('https://images.unsplash.com/photo-1579547621453-625d5d6c8e31?q=80&w=1900&auto=format&fit=crop');
-            background-size: cover; background-position: center;
-            position: fixed; width: 100%; top: 0; left: 0; z-index: 1000;
         }
         .login-card {
             background: rgba(255, 255, 255, 0.12); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.2); padding: 40px; border-radius: 28px; width: 90%; max-width: 380px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); text-align: center; color: white;
         }
-        .login-card input { background: rgba(255, 255, 255, 0.95); border: none; padding: 14px; border-radius: 12px; width: 100%; margin-bottom: 15px; box-sizing: border-box; }
+        .login-card input { background: rgba(255, 255, 255, 0.95); border: none; padding: 14px; border-radius: 12px; width: 100%; margin-bottom: 15px; box-sizing: border-box; color: #1e293b; }
 
         /* PAINEL */
-        #painel { padding: 20px; max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
-        .card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); padding: 25px; border-radius: 20px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        #painel { padding: 20px; max-width: 1200px; margin: 0 auto; }
+        .card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 25px; border-radius: 20px; border: 1px solid var(--border); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); margin-bottom: 25px; }
         
         button { padding: 12px 20px; border-radius: 10px; border: none; cursor: pointer; font-weight: 700; color: white; background: var(--primary); transition: 0.3s; }
         button:hover { background: var(--primary-dark); transform: translateY(-2px); }
@@ -60,7 +62,7 @@
         .admin-form { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
         .admin-form input { padding: 12px; border: 2px solid #f1f5f9; border-radius: 10px; box-sizing: border-box; font-family: inherit; background: white; }
 
-        .item-produto { background: white; padding: 20px; border-radius: 14px; border: 1px solid var(--border); margin-bottom: 15px; }
+        .item-produto { background: white; padding: 20px; border-radius: 14px; border: 1px solid var(--border); margin-bottom: 15px; display: flex; flex-direction: column; }
         .item-produto.alerta { border-left: 6px solid var(--danger); }
         .valor-nome { font-size: 22px; font-weight: 800; color: var(--primary); margin-bottom: 8px; }
         .dado-linha { font-size: 14px; margin: 4px 0; color: #475569; display: flex; }
@@ -70,8 +72,6 @@
     </style>
 </head>
 <body>
-
-    <div id="google_translate_element"></div>
 
     <div id="tela-login">
         <div class="login-card">
@@ -85,6 +85,7 @@
     </div>
 
     <div id="painel" class="hidden">
+        <div id="google_translate_element"></div>
         <div class="nav">
             <div>MYMEDIA | <b>ESTOQUE</b></div>
             <div style="display:flex; gap:10px;">
@@ -148,6 +149,7 @@
                 if(modo === 'register') alert("Registrado!");
                 else {
                     userAtivo = await res.json();
+                    document.body.classList.add('logado'); // MUDA O FUNDO
                     document.getElementById('tela-login').classList.add('hidden');
                     document.getElementById('painel').classList.remove('hidden');
                     if(userAtivo.isadmin) { document.getElementById('area-admin').classList.remove('hidden'); document.getElementById('btn-hist-nav').classList.remove('hidden'); }
