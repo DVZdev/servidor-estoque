@@ -108,10 +108,10 @@
                     <input type="number" id="p-qtd" placeholder="Qtd" style="flex: 1; min-width: 70px;">
                     <input type="number" id="p-min" placeholder="Mín" style="flex: 1; min-width: 70px;">
                 </div>
-                <div style="display:flex; gap:10px; margin-bottom:25px; flex-wrap:wrap">
+                <div style="display:flex; gap:10px; margin-bottom:25px; align-items: center; flex-wrap:wrap">
                     <button onclick="lancar('ENTRADA')" class="btn-success">+ Entrada</button>
                     <button onclick="addCarrinho()">- Saída</button>
-                    <label style="background:#475569; color:white; padding:12px 20px; border-radius:10px; cursor:pointer; font-weight:700; font-size:12px; flex:1; text-align:center">
+                    <label style="background:#475569; color:white; padding:12px 25px; border-radius:10px; cursor:pointer; font-weight:700; font-size:12px; width: fit-content;">
                         Excel <input type="file" accept=".xlsx" style="display:none" onchange="importarMassa(this)">
                     </label>
                     <button onclick="limparEstoqueTodo()" class="btn-danger">Limpar Estoque</button>
