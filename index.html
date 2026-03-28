@@ -2,104 +2,205 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Expedição Profissional v24</title>
+    <title>Sistema Expedição v25</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        :root { --primary: #1e293b; --accent: #2563eb; --bg: #f1f5f9; --success: #059669; --danger: #be123c; }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #1e293b; }
+        body { font-family: sans-serif; background: #f0f2f5; padding: 20px; }
         .hidden { display: none !important; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 20px; border: 1px solid #e2e8f0; }
-        input { padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; margin: 5px 0; width: 100%; box-sizing: border-box; font-size: 14px; }
-        button { padding: 12px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; color: white; background: var(--accent); transition: 0.2s; }
-        button:hover { opacity: 0.9; transform: translateY(-1px); }
-        .user-header { display: flex; justify-content: space-between; align-items: center; background: var(--primary); color: white; padding: 15px 25px; border-radius: 10px; margin-bottom: 25px; }
-        .layout { display: grid; grid-template-columns: 1fr 400px; gap: 25px; }
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #f1f5f9; }
-        th { background: #f8fafc; color: #64748b; text-transform: uppercase; font-size: 12px; }
-        .stock-low { color: var(--danger); font-weight: bold; background: #fff1f2; }
-        .tab-btn { background: #475569; margin-right: 8px; opacity: 0.8; }
-        .tab-active { background: var(--accent) !important; opacity: 1; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-        @media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); max-width: 800px; margin: auto; }
+        input { width: 100%; padding: 10px; margin: 5px 0; box-sizing: border-box; border: 1px solid #ccc; border-radius: 5px; }
+        button { padding: 10px 20px; cursor: pointer; border: none; border-radius: 5px; background: #2563eb; color: white; font-weight: bold; margin: 5px 2px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border-bottom: 1px solid #ddd; padding: 12px; text-align: left; }
+        .nav { background: #1e293b; color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; }
     </style>
 </head>
 <body>
 
-<div id="auth-screen">
-    <div class="card" style="max-width: 400px; margin: 100px auto; border-top: 6px solid var(--accent);">
-        <h2 style="text-align:center; margin-top:0">Acesso ao Sistema</h2>
-        <p style="text-align:center; color:#64748b; font-size:14px">Insira suas credenciais para continuar</p>
-        <input type="text" id="auth-user" placeholder="Usuário">
-        <input type="password" id="auth-pass" placeholder="Senha">
-        <div style="display:flex; gap:10px; margin-top:15px;">
-            <button onclick="autenticar('login')" style="flex:2">Entrar</button>
-            <button onclick="autenticar('register')" style="flex:1; background:var(--success)">Registrar</button>
+<div id="tela-login" class="card" style="max-width: 350px; margin-top: 100px;">
+    <h2>Login</h2>
+    <input type="text" id="user" placeholder="Usuário">
+    <input type="password" id="pass" placeholder="Senha">
+    <button onclick="entrar()">Entrar</button>
+    <button onclick="registrar()" style="background: #059669;">Registrar</button>
+</div>
+
+<div id="painel" class="hidden">
+    <div class="nav">
+        <span>👤 <b id="nome-user"></b></span>
+        <div>
+            <button onclick="aba('estoque')">Estoque</button>
+            <button id="btn-hist" class="hidden" onclick="aba('hist')">Histórico</button>
+            <button onclick="location.reload()" style="background:#be123c">Sair</button>
         </div>
+    </div>
+
+    <div id="aba-estoque" class="card">
+        <div id="form-admin" class="hidden" style="border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 20px;">
+            <h3>Gerenciar Itens</h3>
+            <input type="text" id="p-cod" placeholder="Código" oninput="autoPreencher(this.value)">
+            <input type="text" id="p-nome" placeholder="Nome do Produto">
+            <input type="number" id="p-qtd" placeholder="Quantidade" value="1">
+            <input type="number" id="p-min" placeholder="Mínimo" value="5">
+            <button onclick="movimentar('ENTRADA')">➕ Entrada</button>
+            <button onclick="addLista()" style="background:#f59e0b">📝 Add Saída</button>
+            <hr>
+            <label>Importar Excel: <input type="file" accept=".xlsx" onchange="lerExcel(this)"></label>
+        </div>
+
+        <div id="lista-saida" class="hidden" style="background: #fff8e1; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            <h4>Carrinho de Saída</h4>
+            <div id="itens-saida"></div>
+            <input type="text" id="dest" placeholder="Destino">
+            <button onclick="fecharPedido()" style="background:#be123c">Finalizar e PDF</button>
+        </div>
+
+        <h3>Estoque Atual</h3>
+        <input type="text" placeholder="Buscar..." onkeyup="filtrar(this.value)">
+        <table>
+            <thead><tr><th>Cód</th><th>Produto</th><th>Qtd</th><th>Mín</th><th>Ação</th></tr></thead>
+            <tbody id="corpo-estoque"></tbody>
+        </table>
+    </div>
+
+    <div id="aba-hist" class="card hidden">
+        <div style="display:flex; justify-content:space-between">
+            <h3>Histórico</h3>
+            <button onclick="baixarExcel()" style="background:#157347">Exportar Excel</button>
+        </div>
+        <table id="tab-hist">
+            <thead><tr><th>Data</th><th>Tipo</th><th>Item</th><th>Qtd</th><th>Usuário</th></tr></thead>
+            <tbody id="corpo-hist"></tbody>
+        </table>
     </div>
 </div>
 
-<div id="app" class="hidden">
-    <header class="user-header">
-        <div>👤 Olá, <strong id="display-username">---</strong></div>
-        <div style="display:flex; gap:10px">
-            <button onclick="showTab('estoque')" class="tab-btn tab-active" id="btn-tab-estoque">📦 Estoque</button>
-            <button onclick="showTab('historico')" class="tab-btn hidden" id="btn-tab-hist">🕒 Histórico</button>
-            <button onclick="location.reload()" style="background:var(--danger)">Sair</button>
-        </div>
-    </header>
+<script>
+    const URL = 'https://servidor-estoque-8g56.onrender.com';
+    let dados = [], carrinho = [], eu = null;
 
-    <div id="tab-estoque">
-        <div class="layout">
-            <div>
-                <div id="bloco-admin" class="card hidden" style="border-left: 6px solid var(--success);">
-                    <h3 style="margin-top:0">⚙️ Painel de Controle Admin</h3>
-                    <div style="display: grid; grid-template-columns: 1.5fr 1.5fr 1fr 1fr; gap: 12px;">
-                        <div><label style="font-size:12px">Código</label><input type="text" id="p-cod" placeholder="Ex: 1010" oninput="buscarNoEstoque(this.value)"></div>
-                        <div><label style="font-size:12px">Produto</label><input type="text" id="p-nome" placeholder="Nome do item"></div>
-                        <div><label style="font-size:12px">Qtd</label><input type="number" id="p-qtd" value="1"></div>
-                        <div><label style="font-size:12px">Mín</label><input type="number" id="p-min" value="5"></div>
-                    </div>
-                    <div style="margin-top:20px; display:flex; gap:12px; flex-wrap: wrap;">
-                        <button onclick="registrarMovimentacao('ENTRADA')" style="background:var(--success); flex:1">➕ Entrada Manual</button>
-                        <button onclick="adicionarAoPedido()" style="background:var(--accent); flex:1">📝 Adicionar Saída</button>
-                        <label style="background:#157347; color:white; padding:12px; border-radius:6px; cursor:pointer; font-weight:600; text-align:center; flex:1">
-                            📥 Importar Excel
-                            <input type="file" id="importExcel" accept=".xlsx, .xls" style="display:none" onchange="processarExcel(this)">
-                        </label>
-                    </div>
-                </div>
+    async function entrar() {
+        const u = document.getElementById('user').value;
+        const p = document.getElementById('pass').value;
+        try {
+            const r = await fetch(`${URL}/auth/login`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({u, p})
+            });
+            if(r.ok) {
+                eu = await r.json();
+                document.getElementById('tela-login').classList.add('hidden');
+                document.getElementById('painel').classList.remove('hidden');
+                document.getElementById('nome-user').innerText = eu.u;
+                if(eu.isadmin) {
+                    document.getElementById('form-admin').classList.remove('hidden');
+                    document.getElementById('btn-hist').classList.remove('hidden');
+                }
+                atualizar();
+            } else alert("Login falhou!");
+        } catch(e) { alert("Erro de conexão!"); }
+    }
 
-                <div class="card">
-                    <h3 style="margin-top:0">📊 Inventário em Tempo Real</h3>
-                    <input type="text" id="busca" placeholder="Filtrar por nome ou código..." onkeyup="atualizarTabela()">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Cód</th>
-                                <th>Produto</th>
-                                <th>Qtd Atual</th>
-                                <th>Est. Mín</th>
-                                <th class="adm-tool hidden">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="corpo-estoque"></tbody>
-                    </table>
-                </div>
-            </div>
+    async function registrar() {
+        const u = document.getElementById('user').value;
+        const p = document.getElementById('pass').value;
+        const r = await fetch(`${URL}/auth/register`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({u, p})
+        });
+        if(r.ok) alert("Registrado! Agora entre.");
+        else alert("Erro ao registrar!");
+    }
 
-            <div id="bloco-pedido" class="card hidden">
-                <h3 style="margin-top:0">📋 Carrinho de Saída</h3>
-                <div id="lista-pedido" style="min-height: 100px; border: 2px dashed #e2e8f0; padding: 15px; border-radius: 8px; margin-bottom: 15px; background: #f8fafc;">
-                    <p style="color:#94a3b8; text-align:center">Nenhum item selecionado</p>
-                </div>
-                <label style="font-size:12px">Destino Final:</label>
-                <input type="text" id="destino-final" placeholder="Ex: Setor A / Cliente X">
-                <button onclick="gerarSaidaFinal()" style="width:100%; background:var(--danger); margin-top:15px; font-size:16px">Finalizar Saída & PDF</button>
-            </div>
-        </div>
-    </div>
+    async function atualizar() {
+        const r = await fetch(`${URL}/estoque`);
+        dados = await r.json();
+        const corpo = document.getElementById('corpo-estoque');
+        corpo.innerHTML = dados.map(p => `
+            <tr>
+                <td>${p.cod}</td>
+                <td>${p.nome}</td>
+                <td style="color:${p.qtd <= p.min ? 'red' : 'black'}"><b>${p.qtd}</b></td>
+                <td>${p.min}</td>
+                <td>${eu.isadmin ? `<button onclick="apagar('${p.cod}')" style="background:red; padding:5px">X</button>` : ''}</td>
+            </tr>
+        `).join('');
+    }
 
-    <div id="tab-historico" class="hidden
+    async function movimentar(tipo, manual) {
+        const item = manual || {
+            cod: document.getElementById('p-cod').value,
+            nome: document.getElementById('p-nome').value,
+            qtd: parseInt(document.getElementById('p-qtd').value),
+            min: parseInt(document.getElementById('p-min').value) || 5
+        };
+        const ex = dados.find(x => x.cod == item.cod);
+        let nQ = item.qtd;
+        if(tipo === 'ENTRADA' && ex) nQ += ex.qtd;
+        if(tipo === 'SAÍDA' && ex) nQ = ex.qtd - item.qtd;
+
+        await fetch(`${URL}/estoque`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({...item, qtd: nQ}) });
+        await fetch(`${URL}/historico`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({cod: item.cod, nome: item.nome, qtd: item.qtd, tipo_mov: tipo, usuario: eu.u}) });
+        atualizar();
+    }
+
+    function addLista() {
+        const p = dados.find(x => x.cod == document.getElementById('p-cod').value);
+        const q = parseInt(document.getElementById('p-qtd').value);
+        if(!p || p.qtd < q) return alert("Estoque insuficiente!");
+        carrinho.push({cod: p.cod, nome: p.nome, qtd: q});
+        document.getElementById('lista-saida').classList.remove('hidden');
+        document.getElementById('itens-saida').innerHTML = carrinho.map(i => `<div>${i.qtd}x ${i.nome}</div>`).join('');
+    }
+
+    async function fecharPedido() {
+        const d = document.getElementById('dest').value;
+        if(!d) return alert("Digite o destino!");
+        for(let i of carrinho) await movimentar('SAÍDA', i);
+        
+        const doc = new jspdf.jsPDF();
+        doc.text("GUIA DE SAÍDA - DESTINO: " + d.toUpperCase(), 10, 10);
+        doc.autoTable({ head: [['Item', 'Qtd']], body: carrinho.map(x => [x.nome, x.qtd]) });
+        doc.save(`saida_${d}.pdf`);
+        
+        carrinho = [];
+        document.getElementById('lista-saida').classList.add('hidden');
+        alert("Finalizado!");
+    }
+
+    function lerExcel(input) {
+        const r = new FileReader();
+        r.onload = async (e) => {
+            const data = new Uint8Array(e.target.result);
+            const wb = XLSX.read(data, {type: 'array'});
+            const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+            for(let row of rows) {
+                if(row.cod && row.nome) await movimentar('ENTRADA', {cod: row.cod.toString(), nome: row.nome, qtd: parseInt(row.qtd)||0, min: parseInt(row.min)||5});
+            }
+            alert("Importado!");
+        };
+        r.readAsArrayBuffer(input.files[0]);
+    }
+
+    function aba(t) {
+        document.getElementById('aba-estoque').classList.toggle('hidden', t !== 'estoque');
+        document.getElementById('aba-hist').classList.toggle('hidden', t !== 'hist');
+        if(t === 'hist') carregarHist();
+    }
+
+    async function carregarHist() {
+        const r = await fetch(`${URL}/historico`);
+        const h = await r.json();
+        document.getElementById('corpo-hist').innerHTML = h.map(x => `<tr><td>${new Date(x.data).toLocaleString()}</td><td>${x.tipo_mov}</td><td>${x.nome}</td><td>${x.qtd}</td><td>${x.usuario}</td></tr>`).join('');
+    }
+
+    async function apagar(c) { if(confirm("Apagar?")) { await fetch(`${URL}/estoque/${c}`, {method:'DELETE'}); atualizar(); } }
+    function autoPreencher(c) { const p = dados.find(x => x.cod == c.trim()); if(p) { document.getElementById('p-nome').value = p.nome; document.getElementById('p-min').value = p.min; } }
+    function baixarExcel() { XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById('tab-hist')), "historico.xlsx"); }
+</script>
+</body>
+</html>
