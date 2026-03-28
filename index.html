@@ -3,37 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Expedição v23 - Excel Pro</title>
+    <title>Sistema de Expedição Profissional v24</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root { --primary: #1e293b; --accent: #2563eb; --bg: #f1f5f9; --success: #059669; --danger: #be123c; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #1e293b; }
         .hidden { display: none !important; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        input, select { padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; margin: 5px 0; width: 100%; box-sizing: border-box; }
-        button { padding: 10px 15px; border-radius: 4px; border: none; cursor: pointer; font-weight: 600; color: white; background: var(--accent); transition: 0.2s; }
-        button:hover { opacity: 0.9; }
-        .user-header { display: flex; justify-content: space-between; align-items: center; background: var(--primary); color: white; padding: 15px 25px; border-radius: 8px; margin-bottom: 20px; }
-        .layout { display: grid; grid-template-columns: 1fr 380px; gap: 20px; }
-        table { width: 100%; border-collapse: collapse; background: white; margin-top: 10px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
-        .tab-btn { background: #475569; margin-right: 5px; }
-        .tab-active { background: var(--accent) !important; }
-        .stock-low { color: var(--danger); font-weight: bold; }
-        @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 20px; border: 1px solid #e2e8f0; }
+        input { padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; margin: 5px 0; width: 100%; box-sizing: border-box; font-size: 14px; }
+        button { padding: 12px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; color: white; background: var(--accent); transition: 0.2s; }
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+        .user-header { display: flex; justify-content: space-between; align-items: center; background: var(--primary); color: white; padding: 15px 25px; border-radius: 10px; margin-bottom: 25px; }
+        .layout { display: grid; grid-template-columns: 1fr 400px; gap: 25px; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #f1f5f9; }
+        th { background: #f8fafc; color: #64748b; text-transform: uppercase; font-size: 12px; }
+        .stock-low { color: var(--danger); font-weight: bold; background: #fff1f2; }
+        .tab-btn { background: #475569; margin-right: 8px; opacity: 0.8; }
+        .tab-active { background: var(--accent) !important; opacity: 1; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        @media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
 <div id="auth-screen">
-    <div class="card" style="max-width: 400px; margin: 80px auto; border-top: 5px solid var(--accent);">
-        <h2 style="text-align:center">Acesso ao Sistema</h2>
+    <div class="card" style="max-width: 400px; margin: 100px auto; border-top: 6px solid var(--accent);">
+        <h2 style="text-align:center; margin-top:0">Acesso ao Sistema</h2>
+        <p style="text-align:center; color:#64748b; font-size:14px">Insira suas credenciais para continuar</p>
         <input type="text" id="auth-user" placeholder="Usuário">
         <input type="password" id="auth-pass" placeholder="Senha">
-        <div style="display:flex; gap:10px; margin-top:10px;">
-            <button onclick="autenticar('login')" style="flex:1">Entrar</button>
+        <div style="display:flex; gap:10px; margin-top:15px;">
+            <button onclick="autenticar('login')" style="flex:2">Entrar</button>
             <button onclick="autenticar('register')" style="flex:1; background:var(--success)">Registrar</button>
         </div>
     </div>
@@ -41,7 +43,7 @@
 
 <div id="app" class="hidden">
     <header class="user-header">
-        <div>👤 <strong id="display-username">---</strong></div>
+        <div>👤 Olá, <strong id="display-username">---</strong></div>
         <div style="display:flex; gap:10px">
             <button onclick="showTab('estoque')" class="tab-btn tab-active" id="btn-tab-estoque">📦 Estoque</button>
             <button onclick="showTab('historico')" class="tab-btn hidden" id="btn-tab-hist">🕒 Histórico</button>
@@ -52,35 +54,35 @@
     <div id="tab-estoque">
         <div class="layout">
             <div>
-                <div id="bloco-admin" class="card hidden" style="border-left: 5px solid var(--accent);">
-                    <h3>⚙️ Gerenciar Produto</h3>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 80px 80px; gap: 10px;">
-                        <input type="text" id="p-cod" placeholder="Cód" oninput="preencherCampos(this.value)">
-                        <input type="text" id="p-nome" placeholder="Produto">
-                        <input type="number" id="p-qtd" value="1" title="Quantidade">
-                        <input type="number" id="p-min" value="5" title="Mínimo">
+                <div id="bloco-admin" class="card hidden" style="border-left: 6px solid var(--success);">
+                    <h3 style="margin-top:0">⚙️ Painel de Controle Admin</h3>
+                    <div style="display: grid; grid-template-columns: 1.5fr 1.5fr 1fr 1fr; gap: 12px;">
+                        <div><label style="font-size:12px">Código</label><input type="text" id="p-cod" placeholder="Ex: 1010" oninput="buscarNoEstoque(this.value)"></div>
+                        <div><label style="font-size:12px">Produto</label><input type="text" id="p-nome" placeholder="Nome do item"></div>
+                        <div><label style="font-size:12px">Qtd</label><input type="number" id="p-qtd" value="1"></div>
+                        <div><label style="font-size:12px">Mín</label><input type="number" id="p-min" value="5"></div>
                     </div>
-                    <div style="margin-top:15px; display:flex; gap:10px; flex-wrap: wrap;">
-                        <button onclick="salvarMov('ENTRADA')" style="background:var(--success)">➕ Lançar Entrada</button>
-                        <button onclick="addPedido()" style="background:var(--accent)">📝 Add ao Pedido</button>
-                        <label style="background:#157347; color:white; padding:10px; border-radius:4px; cursor:pointer; font-weight:bold; display: flex; align-items: center;">
-                            📥 Importar Excel (cod, nome, qtd, min)
-                            <input type="file" id="importExcel" accept=".xlsx, .xls" style="display:none" onchange="importarExcel(this)">
+                    <div style="margin-top:20px; display:flex; gap:12px; flex-wrap: wrap;">
+                        <button onclick="registrarMovimentacao('ENTRADA')" style="background:var(--success); flex:1">➕ Entrada Manual</button>
+                        <button onclick="adicionarAoPedido()" style="background:var(--accent); flex:1">📝 Adicionar Saída</button>
+                        <label style="background:#157347; color:white; padding:12px; border-radius:6px; cursor:pointer; font-weight:600; text-align:center; flex:1">
+                            📥 Importar Excel
+                            <input type="file" id="importExcel" accept=".xlsx, .xls" style="display:none" onchange="processarExcel(this)">
                         </label>
                     </div>
                 </div>
 
                 <div class="card">
-                    <h3>📊 Inventário Geral</h3>
-                    <input type="text" id="busca" placeholder="Buscar produto..." onkeyup="render()">
+                    <h3 style="margin-top:0">📊 Inventário em Tempo Real</h3>
+                    <input type="text" id="busca" placeholder="Filtrar por nome ou código..." onkeyup="atualizarTabela()">
                     <table>
                         <thead>
                             <tr>
                                 <th>Cód</th>
-                                <th>Item</th>
-                                <th>Qtd</th>
-                                <th>Mín</th>
-                                <th class="adm-tool hidden">Ação</th>
+                                <th>Produto</th>
+                                <th>Qtd Atual</th>
+                                <th>Est. Mín</th>
+                                <th class="adm-tool hidden">Ações</th>
                             </tr>
                         </thead>
                         <tbody id="corpo-estoque"></tbody>
@@ -89,249 +91,15 @@
             </div>
 
             <div id="bloco-pedido" class="card hidden">
-                <h3>📋 Checkout de Saída</h3>
-                <div id="lista-pedido" style="min-height: 50px; border: 1px dashed #ccc; padding: 10px; margin-bottom: 10px;"></div>
-                <input type="text" id="destino-pedido" placeholder="Destino / Cliente">
-                <button onclick="finalizarPedido()" style="width:100%; background:var(--danger); margin-top:10px;">Finalizar e Gerar PDF</button>
+                <h3 style="margin-top:0">📋 Carrinho de Saída</h3>
+                <div id="lista-pedido" style="min-height: 100px; border: 2px dashed #e2e8f0; padding: 15px; border-radius: 8px; margin-bottom: 15px; background: #f8fafc;">
+                    <p style="color:#94a3b8; text-align:center">Nenhum item selecionado</p>
+                </div>
+                <label style="font-size:12px">Destino Final:</label>
+                <input type="text" id="destino-final" placeholder="Ex: Setor A / Cliente X">
+                <button onclick="gerarSaidaFinal()" style="width:100%; background:var(--danger); margin-top:15px; font-size:16px">Finalizar Saída & PDF</button>
             </div>
         </div>
     </div>
 
-    <div id="tab-historico" class="hidden">
-        <div class="card">
-            <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom: 15px;">
-                <h3>🕒 Histórico de Movimentações</h3>
-                <button onclick="exportarExcel()" style="background:#157347">📗 Exportar para Excel</button>
-            </div>
-            <table id="tabela-hist">
-                <thead>
-                    <tr>
-                        <th>Data</th>
-                        <th>Tipo</th>
-                        <th>Item</th>
-                        <th>Qtd</th>
-                        <th>Usuário</th>
-                    </tr>
-                </thead>
-                <tbody id="corpo-historico"></tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<script>
-    const API_URL = 'https://servidor-estoque-8g56.onrender.com';
-    let estoque = [], pedidoAtual = [], usuarioLogado = null;
-
-    async function autenticar(modo) {
-        const u = document.getElementById('auth-user').value.trim();
-        const p = document.getElementById('auth-pass').value;
-        if (!u || !p) return alert("Preencha os campos!");
-
-        try {
-            const res = await fetch(`${API_URL}/auth/${modo}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ u, p })
-            });
-
-            if (res.ok) {
-                if (modo === 'register') {
-                    alert("Usuário registrado com sucesso! Agora faça o login.");
-                } else {
-                    usuarioLogado = await res.json();
-                    entrarNoApp();
-                }
-            } else {
-                alert("Erro na autenticação. Verifique usuário e senha.");
-            }
-        } catch (e) {
-            alert("Erro ao conectar com o servidor.");
-        }
-    }
-
-    function entrarNoApp() {
-        document.getElementById('auth-screen').classList.add('hidden');
-        document.getElementById('app').classList.remove('hidden');
-        document.getElementById('display-username').innerText = usuarioLogado.u;
-        
-        if (usuarioLogado.isadmin) {
-            document.getElementById('btn-tab-hist').classList.remove('hidden');
-            document.getElementById('bloco-admin').classList.remove('hidden');
-            document.getElementById('bloco-pedido').classList.remove('hidden');
-            document.querySelectorAll('.adm-tool').forEach(el => el.classList.remove('hidden'));
-        }
-        carregarEstoque();
-    }
-
-    async function carregarEstoque() {
-        const res = await fetch(`${API_URL}/estoque`);
-        estoque = await res.json();
-        render();
-    }
-
-    function render() {
-        const busca = document.getElementById('busca').value.toLowerCase();
-        const corpo = document.getElementById('corpo-estoque');
-        corpo.innerHTML = estoque.filter(p => p.nome.toLowerCase().includes(busca) || p.cod.includes(busca)).map(p => `
-            <tr>
-                <td>${p.cod}</td>
-                <td>${p.nome}</td>
-                <td class="${p.qtd <= p.min ? 'stock-low' : ''}">${p.qtd}</td>
-                <td>${p.min || 0}</td>
-                <td class="${usuarioLogado.isadmin ? '' : 'hidden'}">
-                    <button onclick="deletarProduto('${p.cod}')" style="background:var(--danger); padding: 5px 10px;">X</button>
-                </td>
-            </tr>
-        `).join('');
-    }
-
-    function showTab(tab) {
-        document.getElementById('tab-estoque').classList.toggle('hidden', tab !== 'estoque');
-        document.getElementById('tab-historico').classList.toggle('hidden', tab !== 'historico');
-        document.getElementById('btn-tab-estoque').classList.toggle('tab-active', tab === 'estoque');
-        document.getElementById('btn-tab-hist').classList.toggle('tab-active', tab === 'historico');
-        if (tab === 'historico') carregarHistorico();
-    }
-
-    async function carregarHistorico() {
-        const res = await fetch(`${API_URL}/historico`);
-        const dados = await res.json();
-        document.getElementById('corpo-historico').innerHTML = dados.map(h => `
-            <tr>
-                <td>${new Date(h.data).toLocaleString()}</td>
-                <td>${h.tipo_mov}</td>
-                <td>${h.nome}</td>
-                <td>${h.qtd}</td>
-                <td>${h.usuario}</td>
-            </tr>
-        `).join('');
-    }
-
-    function preencherCampos(cod) {
-        const p = estoque.find(x => x.cod == cod.trim());
-        if (p) {
-            document.getElementById('p-nome').value = p.nome;
-            document.getElementById('p-min').value = p.min || 5;
-        }
-    }
-
-    async function salvarMov(tipo, manualItem = null) {
-        const item = manualItem || {
-            cod: document.getElementById('p-cod').value.trim(),
-            nome: document.getElementById('p-nome').value.trim(),
-            qtd: parseInt(document.getElementById('p-qtd').value),
-            min: parseInt(document.getElementById('p-min').value) || 5,
-            tipo: 'un'
-        };
-        
-        const ex = estoque.find(x => x.cod == item.cod);
-        let novaQtd = item.qtd;
-        
-        if (tipo === 'ENTRADA' && ex) novaQtd += parseInt(ex.qtd);
-        if (tipo === 'SAÍDA' && ex) novaQtd = parseInt(ex.qtd) - item.qtd;
-
-        // Atualiza Estoque
-        await fetch(`${API_URL}/estoque`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ...item, qtd: novaQtd })
-        });
-
-        // Grava Histórico
-        await fetch(`${API_URL}/historico`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                cod: item.cod, 
-                nome: item.nome, 
-                qtd: item.qtd, 
-                tipo_mov: tipo, 
-                usuario: usuarioLogado.u 
-            })
-        });
-
-        carregarEstoque();
-    }
-
-    async function importarExcel(input) {
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
-            const sheet = workbook.Sheets[workbook.SheetNames[0]];
-            const rows = XLSX.utils.sheet_to_json(sheet);
-            
-            let processados = 0;
-            for (let row of rows) {
-                if (row.cod && row.nome) {
-                    await salvarMov('ENTRADA', {
-                        cod: row.cod.toString(),
-                        nome: row.nome,
-                        qtd: parseInt(row.qtd) || 0,
-                        min: parseInt(row.min) || 5,
-                        tipo: 'un'
-                    });
-                    processados++;
-                }
-            }
-            alert(processados + " produtos importados/atualizados!");
-            carregarEstoque();
-        };
-        reader.readAsArrayBuffer(input.files[0]);
-    }
-
-    async function deletarProduto(cod) {
-        if (confirm("Tem certeza que deseja excluir este produto permanentemente?")) {
-            await fetch(`${API_URL}/estoque/${cod}`, { method: 'DELETE' });
-            carregarEstoque();
-        }
-    }
-
-    function addPedido() {
-        const cod = document.getElementById('p-cod').value.trim();
-        const p = estoque.find(x => x.cod == cod);
-        const q = parseInt(document.getElementById('p-qtd').value);
-        if (!p || p.qtd < q) return alert("Erro: Produto não encontrado ou estoque insuficiente!");
-        
-        pedidoAtual.push({ cod: p.cod, nome: p.nome, qtd: q });
-        document.getElementById('lista-pedido').innerHTML = pedidoAtual.map((it, idx) => `
-            <div style="display:flex; justify-content:space-between; margin-bottom:5px">
-                <span>${it.qtd}x ${it.nome}</span>
-                <button onclick="pedidoAtual.splice(${idx},1); document.getElementById('lista-pedido').innerHTML = pedidoAtual.map(...)" style="background:none; color:red; padding:0">X</button>
-            </div>
-        `).join('');
-    }
-
-    async function finalizarPedido() {
-        const dest = document.getElementById('destino-pedido').value;
-        if (!dest || pedidoAtual.length === 0) return alert("Informe o destino e adicione itens!");
-        
-        for (let it of pedidoAtual) {
-            await salvarMov('SAÍDA', it);
-        }
-
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        doc.text(`COMPROVANTE DE SAÍDA - DESTINO: ${dest.toUpperCase()}`, 10, 10);
-        doc.autoTable({
-            head: [['Cód', 'Item', 'Qtd']],
-            body: pedidoAtual.map(x => [x.cod, x.nome, x.qtd]),
-            startY: 20
-        });
-        doc.save(`saida_${dest}.pdf`);
-
-        pedidoAtual = [];
-        document.getElementById('lista-pedido').innerHTML = '';
-        document.getElementById('destino-pedido').value = '';
-        alert("Saída processada com sucesso!");
-        carregarEstoque();
-    }
-
-    function exportarExcel() {
-        const wb = XLSX.utils.table_to_book(document.getElementById('tabela-hist'));
-        XLSX.writeFile(wb, "historico_expedicao.xlsx");
-    }
-</script>
-</body>
-</html>
+    <div id="tab-historico" class="hidden
