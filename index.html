@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Sistema de Expedição v14</title>
+    <title>Sistema de Expedição v15</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <style>
@@ -12,13 +12,14 @@
         .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; border: 1px solid #e2e8f0; }
         input, select { padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; margin: 5px 0; width: 100%; box-sizing: border-box; }
         button { padding: 10px 15px; border-radius: 4px; border: none; cursor: pointer; font-weight: 600; color: white; background: var(--accent); transition: 0.2s; }
-        button:hover { opacity: 0.9; }
         .user-header { display: flex; justify-content: space-between; align-items: center; background: var(--primary); color: white; padding: 15px 25px; border-radius: 8px; margin-bottom: 20px; }
         .layout { display: grid; grid-template-columns: 1fr 380px; gap: 20px; }
-        .alerta-minimo { background: #fff1f2 !important; border-left: 5px solid var(--danger); }
-        #admin-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 9999; }
-        .modal-content { background: white; padding: 30px; border-radius: 12px; width: 500px; max-height: 80vh; overflow-y: auto; position: relative; }
-        @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+        .tab-btn { background: #475569; margin-right: 5px; }
+        .tab-active { background: var(--accent) !important; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; }
+        .mov-entrada { color: var(--success); font-weight: bold; }
+        .mov-saida { color: var(--danger); font-weight: bold; }
     </style>
 </head>
 <body>
@@ -35,67 +36,61 @@
     </div>
 </div>
 
-<div id="admin-modal" class="hidden">
-    <div class="modal-content">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h2 style="margin:0">⚙️ Painel Admin</h2>
-            <button onclick="fecharAdmin()" style="background:var(--danger)">Fechar X</button>
-        </div>
-        <div class="card">
-            <h4>Gerenciar Usuários</h4>
-            <table style="width:100%; text-align:left; border-collapse: collapse;">
-                <tbody id="lista-usuarios-admin"></tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
 <div id="app" class="hidden">
     <header class="user-header">
         <div>👤 <strong id="display-username">---</strong></div>
         <div style="display:flex; gap:10px">
-            <button id="btn-admin-trigger" onclick="abrirAdmin()" class="hidden" style="background:#475569">⚙️ Admin</button>
-            <button id="btn-excel" onclick="document.getElementById('csvInput').click()" class="hidden" style="background:#0ea5e9">📥 Excel</button>
-            <input type="file" id="csvInput" class="hidden" accept=".csv" onchange="importarCSV(event)">
-            <button onclick="carregarEstoque()" style="background:var(--success)">🔄 Atualizar</button>
+            <button onclick="showTab('estoque')" class="tab-btn tab-active" id="btn-tab-estoque">📦 Estoque</button>
+            <button onclick="showTab('historico')" class="tab-btn hidden" id="btn-tab-hist">🕒 Histórico</button>
+            <button id="btn-admin" onclick="abrirAdmin()" class="hidden" style="background:#64748b">⚙️ Admin</button>
             <button onclick="location.reload()" style="background:var(--danger)">Sair</button>
         </div>
     </header>
 
-    <div class="layout">
-        <div>
-            <div id="bloco-admin-mov" class="card hidden">
-                <h3>📦 Movimentação de Estoque</h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px;">
-                    <div>Cód:<input type="text" id="p-cod" oninput="preencherCampos(this.value)"></div>
-                    <div>Produto:<input type="text" id="p-nome"></div>
-                    <div>Qtd:<input type="number" id="p-qtd" value="1"></div>
-                    <div>Tipo:<select id="p-tipo"><option value="un">UN</option><option value="pct">PCT</option></select></div>
-                    <div>Mín:<input type="number" id="p-min" value="5"></div>
+    <div id="tab-estoque">
+        <div class="layout">
+            <div>
+                <div id="bloco-admin-mov" class="card hidden">
+                    <h3>📦 Movimentação</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px;">
+                        <input type="text" id="p-cod" placeholder="Cód" oninput="preencherCampos(this.value)">
+                        <input type="text" id="p-nome" placeholder="Produto">
+                        <input type="number" id="p-qtd" value="1">
+                        <select id="p-tipo"><option value="un">UN</option><option value="pct">PCT</option></select>
+                    </div>
+                    <button onclick="salvarMov('ENTRADA')" style="margin-top:10px; background:var(--success)">➕ Lançar Entrada</button>
+                    <button onclick="addPedido()" style="margin-top:10px; background:var(--accent)">📝 Add ao Pedido</button>
                 </div>
-                <div style="margin-top: 15px; display: flex; gap: 10px;">
-                    <button onclick="salvarItem()" style="flex:1; background:var(--success)">➕ Atualizar Saldo</button>
-                    <button onclick="addPedido()" style="flex:1; background:var(--accent)">📝 Add ao Pedido</button>
+                <div class="card">
+                    <h3>📊 Inventário</h3>
+                    <input type="text" id="busca" placeholder="Buscar..." onkeyup="render()">
+                    <table id="tabela-estoque">
+                        <thead><tr><th>Cód</th><th>Item</th><th>Qtd</th><th>Tipo</th><th class="col-admin hidden">Ações</th></tr></thead>
+                        <tbody id="corpo-estoque"></tbody>
+                    </table>
                 </div>
             </div>
-
-            <div class="card">
-                <h3>📊 Inventário Atual</h3>
-                <input type="text" id="busca" placeholder="Pesquisar produto ou código..." onkeyup="render()">
-                <table style="width:100%; border-collapse: collapse; margin-top:10px;">
-                    <thead><tr style="text-align:left; border-bottom: 2px solid #eee;"><th>Cód</th><th>Item</th><th>Qtd</th><th>Tipo</th><th class="col-admin hidden">Ações</th></tr></thead>
-                    <tbody id="corpo-estoque"></tbody>
-                </table>
+            <div id="bloco-pedido" class="card hidden">
+                <h3>📋 Pedido Atual</h3>
+                <div id="lista-pedido"></div>
+                <input type="text" id="destino-pedido" placeholder="Destino" style="margin-top:10px">
+                <button onclick="finalizarPedido()" style="width:100%; background:var(--danger); margin-top:10px;">Finalizar Saída</button>
             </div>
         </div>
+    </div>
 
-        <div id="bloco-pedido" class="card hidden" style="border-top: 5px solid var(--warning);">
-            <h3>📋 Lista de Pedido</h3>
-            <div id="lista-pedido" style="margin-bottom: 10px;"></div>
-            <div id="footer-pedido" class="hidden">
-                <input type="text" id="destino-pedido" placeholder="Destino do Pedido">
-                <button onclick="finalizarPedido()" style="width:100%; background:var(--danger); margin-top:10px;">Finalizar e Baixar Estoque</button>
+    <div id="tab-historico" class="hidden">
+        <div class="card">
+            <h3>🕒 Histórico de Movimentações</h3>
+            <div style="display:flex; gap:10px; margin-bottom:20px;">
+                <div>Início: <input type="date" id="hist-inicio"></div>
+                <div>Fim: <input type="date" id="hist-fim"></div>
+                <button onclick="carregarHistorico()" style="align-self: flex-end;">Filtrar</button>
             </div>
+            <table>
+                <thead><tr><th>Data</th><th>Tipo</th><th>Cód</th><th>Produto</th><th>Qtd</th><th>Usuário</th></tr></thead>
+                <tbody id="corpo-historico"></tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -105,36 +100,34 @@
     let estoque = [], pedidoAtual = [], usuarioLogado = null;
 
     async function autenticar(modo) {
-        const u = document.getElementById('auth-user').value.trim();
+        const u = document.getElementById('auth-user').value;
         const p = document.getElementById('auth-pass').value;
-        if(!u || !p) return alert("Preencha os campos!");
-        try {
-            const res = await fetch(`${API_URL}/auth/${modo}`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ u, p })
-            });
-            if(res.ok) {
-                if(modo === 'register') alert("Cadastrado! Faça o login.");
-                else { usuarioLogado = await res.json(); entrarNoApp(); }
-            } else alert("Usuário ou senha inválidos.");
-        } catch(e) { alert("Erro de conexão com o servidor."); }
+        const res = await fetch(`${API_URL}/auth/${modo}`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ u, p })
+        });
+        if(res.ok) {
+            usuarioLogado = await res.json();
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+            document.getElementById('display-username').innerText = usuarioLogado.u;
+            if(usuarioLogado.isadmin) {
+                document.getElementById('btn-tab-hist').classList.remove('hidden');
+                document.getElementById('btn-admin').classList.remove('hidden');
+                document.getElementById('bloco-admin-mov').classList.remove('hidden');
+                document.getElementById('bloco-pedido').classList.remove('hidden');
+                document.querySelectorAll('.col-admin').forEach(e => e.classList.remove('hidden'));
+            }
+            carregarEstoque();
+        } else alert("Erro!");
     }
 
-    function entrarNoApp() {
-        document.getElementById('auth-screen').classList.add('hidden');
-        document.getElementById('app').classList.remove('hidden');
-        document.getElementById('display-username').innerText = usuarioLogado.u;
-
-        // TRAVA DE SEGURANÇA VISUAL
-        if(usuarioLogado.isadmin) {
-            document.getElementById('btn-admin-trigger').classList.remove('hidden');
-            document.getElementById('btn-excel').classList.remove('hidden');
-            document.getElementById('bloco-admin-mov').classList.remove('hidden');
-            document.getElementById('bloco-pedido').classList.remove('hidden');
-            // Mostra colunas de ação (excluir) na tabela
-            document.querySelectorAll('.col-admin').forEach(el => el.classList.remove('hidden'));
-        }
-        carregarEstoque();
+    function showTab(tab) {
+        document.getElementById('tab-estoque').classList.toggle('hidden', tab !== 'estoque');
+        document.getElementById('tab-historico').classList.toggle('hidden', tab !== 'historico');
+        document.getElementById('btn-tab-estoque').classList.toggle('tab-active', tab === 'estoque');
+        document.getElementById('btn-tab-hist').classList.toggle('tab-active', tab === 'historico');
+        if(tab === 'historico') carregarHistorico();
     }
 
     async function carregarEstoque() {
@@ -143,94 +136,47 @@
         render();
     }
 
-    function render() {
-        const busca = document.getElementById('busca').value.toLowerCase();
-        const corpo = document.getElementById('corpo-estoque');
-        corpo.innerHTML = '';
-        estoque.filter(p => p.nome.toLowerCase().includes(busca) || p.cod.includes(busca)).forEach(p => {
-            const critico = parseInt(p.qtd) <= parseInt(p.min);
-            corpo.innerHTML += `<tr class="${critico ? 'alerta-minimo' : ''}">
-                <td style="padding:10px">${p.cod}</td><td>${p.nome}</td><td>${p.qtd}</td><td>${p.tipo}</td>
-                <td class="col-admin ${usuarioLogado.isadmin ? '' : 'hidden'}">
-                    <button onclick="excluirItem('${p.cod}')" style="background:none; color:red">✖</button>
-                </td></tr>`;
-        });
-    }
-
-    // --- FUNÇÕES DE ADMIN (Protegidas no Front-end) ---
-    async function salvarItem() {
-        if(!usuarioLogado.isadmin) return alert("Ação negada!");
-        const item = {
-            cod: document.getElementById('p-cod').value.trim(),
-            nome: document.getElementById('p-nome').value.trim(),
+    async function salvarMov(tipo, itemPedido = null) {
+        const item = itemPedido || {
+            cod: document.getElementById('p-cod').value,
+            nome: document.getElementById('p-nome').value,
             qtd: parseInt(document.getElementById('p-qtd').value),
             tipo: document.getElementById('p-tipo').value,
-            min: parseInt(document.getElementById('p-min').value)
+            min: 5
         };
-        const ex = estoque.find(x => x.cod === item.cod);
-        if(ex) item.qtd += parseInt(ex.qtd);
-        await fetch(`${API_URL}/estoque`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(item) });
+
+        // Salva no estoque
+        await fetch(`${API_URL}/estoque`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(item)
+        });
+
+        // Salva no histórico (Precisamos criar essa rota no server.js depois)
+        await fetch(`${API_URL}/historico`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                cod: item.cod, nome: item.nome, qtd: item.qtd, 
+                tipo_mov: tipo, usuario: usuarioLogado.u
+            })
+        });
         carregarEstoque();
     }
 
-    function addPedido() {
-        if(!usuarioLogado.isadmin) return;
-        const cod = document.getElementById('p-cod').value.trim();
-        const p = estoque.find(x => x.cod === cod);
-        const qtd = parseInt(document.getElementById('p-qtd').value);
-        if(!p || p.qtd < qtd) return alert("Estoque insuficiente!");
-        pedidoAtual.push({ cod, nome: p.nome, qtd });
-        renderPedido();
+    async function carregarHistorico() {
+        const inicio = document.getElementById('hist-inicio').value;
+        const fim = document.getElementById('hist-fim').value;
+        const res = await fetch(`${API_URL}/historico?inicio=${inicio}&fim=${fim}`);
+        const dados = await res.json();
+        document.getElementById('corpo-historico').innerHTML = dados.map(h => `
+            <tr>
+                <td>${new Date(h.data).toLocaleString()}</td>
+                <td class="${h.tipo_mov === 'ENTRADA' ? 'mov-entrada' : 'mov-saida'}">${h.tipo_mov}</td>
+                <td>${h.cod}</td><td>${h.nome}</td><td>${h.qtd}</td><td>${h.usuario}</td>
+            </tr>
+        `).join('');
     }
 
-    function renderPedido() {
-        const div = document.getElementById('lista-pedido');
-        document.getElementById('footer-pedido').classList.toggle('hidden', pedidoAtual.length === 0);
-        div.innerHTML = pedidoAtual.map((it, i) => `<div style="padding:5px; border-bottom:1px solid #eee;">${it.qtd}x ${it.nome} <button onclick="pedidoAtual.splice(${i},1); renderPedido();" style="background:none; color:red; float:right">x</button></div>`).join('');
-    }
-
-    async function finalizarPedido() {
-        const dest = document.getElementById('destino-pedido').value;
-        if(!dest) return alert("Informe o destino.");
-        for(let it of pedidoAtual) {
-            const p = estoque.find(x => x.cod === it.cod);
-            await fetch(`${API_URL}/estoque`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({...p, qtd: p.qtd - it.qtd}) });
-        }
-        const doc = new jspdf.jsPDF();
-        doc.text(`PEDIDO: ${dest} - DATA: ${new Date().toLocaleDateString()}`, 10, 10);
-        doc.autoTable({ head: [['Cód', 'Item', 'Qtd']], body: pedidoAtual.map(x => [x.cod, x.nome, x.qtd]) });
-        doc.save(`pedido_${dest}.pdf`);
-        pedidoAtual = []; renderPedido(); carregarEstoque();
-    }
-
-    function importarCSV(e) {
-        if(!usuarioLogado.isadmin) return;
-        const reader = new FileReader();
-        reader.onload = async (f) => {
-            const linhas = f.target.result.split(/\r?\n/);
-            for(let l of linhas) {
-                const c = l.split(/[;,]/);
-                if(c.length >= 3) await fetch(`${API_URL}/estoque`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod:c[0].trim(), nome:c[1].trim(), qtd:parseInt(c[2]), tipo:'un', min:5}) });
-            }
-            carregarEstoque(); alert("Importação Concluída!");
-        };
-        reader.readAsText(e.target.files[0], 'ISO-8859-1');
-    }
-
-    async function abrirAdmin() {
-        document.getElementById('admin-modal').classList.remove('hidden');
-        const res = await fetch(`${API_URL}/auth/users`);
-        const users = await res.json();
-        document.getElementById('lista-usuarios-admin').innerHTML = users.map(u => `
-            <tr style="border-bottom: 1px solid #eee;"><td style="padding:10px">👤 ${u.u}</td>
-            <td style="text-align:right"><button onclick="mudarSenha('${u.u}')" style="background:var(--warning); font-size:11px">Senha</button>
-            ${u.u !== usuarioLogado.u ? `<button onclick="removerUsuario('${u.u}')" style="background:var(--danger); font-size:11px; margin-left:5px">Excluir</button>` : ''}</td></tr>`).join('');
-    }
-    function fecharAdmin() { document.getElementById('admin-modal').classList.add('hidden'); }
-    async function removerUsuario(n) { if(confirm(`Excluir ${n}?`)) { await fetch(`${API_URL}/auth/users/${n}`, {method:'DELETE'}); abrirAdmin(); } }
-    async function mudarSenha(n) { const s = prompt("Nova senha:"); if(s) { await fetch(`${API_URL}/auth/users/password`, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({u:n, newPassword:s})}); alert("Senha alterada!"); } }
-    async function excluirItem(c) { if(confirm("Deseja apagar este item permanentemente?")) { await fetch(`${API_URL}/estoque/${c}`, {method:'DELETE'}); carregarEstoque(); } }
-    function preencherCampos(cod) { const p = estoque.find(x => x.cod === cod.trim()); if(p) { document.getElementById('p-nome').value = p.nome; document.getElementById('p-tipo').value = p.tipo; document.getElementById('p-min').value = p.min; } }
+    // ... (Manter funções de render, preencherCampos, addPedido e finalizarPedido do código anterior)
 </script>
 </body>
 </html>
