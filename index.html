@@ -22,7 +22,7 @@
         body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; }
         .hidden { display: none !important; }
 
-        /* TELA DE LOGIN COM FUNDO E CAIXA TRANSPARENTE */
+        /* TELA DE LOGIN GLASS */
         #tela-login {
             height: 100vh;
             display: flex;
@@ -35,10 +35,8 @@
         }
 
         .login-card {
-            /* EFEITO MEIO TRANSPARENTE (GLASS) */
             background: rgba(255, 255, 255, 0.15); 
             backdrop-filter: blur(15px); 
-            -webkit-backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             padding: 40px;
             border-radius: 24px;
@@ -49,38 +47,29 @@
             color: white;
         }
 
-        .login-card h1 { color: white; margin-bottom: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-        .login-card p { color: rgba(255,255,255,0.8); margin-bottom: 30px; font-size: 14px; }
-
-        /* INPUTS DENTRO DO LOGIN */
         .login-card input {
             background: rgba(255, 255, 255, 0.9);
             border: none;
-            color: #1e293b;
-            font-weight: 500;
+            padding: 12px;
+            border-radius: 8px;
+            width: 100%;
+            margin-bottom: 15px;
+            box-sizing: border-box;
         }
 
-        /* PAINEL INTERNO */
+        /* PAINEL */
         #painel { padding: 15px; }
-        .card { 
-            background: white; 
-            padding: 25px; 
-            border-radius: 16px; 
-            border: 1px solid var(--border);
-            margin-bottom: 20px; 
-        }
-
-        .campo-box label { font-size: 11px; font-weight: 800; color: var(--primary); text-transform: uppercase; display: block; margin-bottom: 5px; }
-        input { padding: 12px; border: 2px solid #f1f5f9; border-radius: 8px; width: 100%; box-sizing: border-box; margin-bottom: 15px; }
-
+        .card { background: white; padding: 25px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 20px; }
+        
         button { 
             padding: 12px 20px; border-radius: 8px; border: none; cursor: pointer; 
-            font-weight: 700; color: white; background: var(--primary); width: 100%; transition: 0.2s;
+            font-weight: 700; color: white; background: var(--primary); transition: 0.2s;
         }
-        button:hover { background: var(--primary-dark); transform: translateY(-2px); }
+        button:hover { background: var(--primary-dark); transform: translateY(-1px); }
+        .btn-danger { background: var(--danger); }
+        .btn-success { background: var(--success); }
 
-        /* LISTA DE PRODUTOS CORRIGIDA (NOME EM CIMA) */
-        .item-produto { background: white; padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 12px; display: flex; flex-direction: column; }
+        .item-produto { background: white; padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 12px; }
         .valor-nome { font-size: 20px; font-weight: 800; color: var(--primary); margin-bottom: 8px; }
         .dado-linha { font-size: 14px; margin: 2px 0; color: #475569; }
         .dado-linha b { color: #94a3b8; font-size: 11px; min-width: 100px; display: inline-block; text-transform: uppercase; }
@@ -94,23 +83,16 @@
         <div class="login-card">
             <h1>MyMedia</h1>
             <p>Controle de Expedição</p>
-            
-            <div style="text-align: left;">
-                <label style="font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; display: block;">Usuário</label>
-                <input type="text" id="user" placeholder="Nome de usuário">
-                
-                <label style="font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; display: block;">Senha</label>
-                <input type="password" id="pass" placeholder="••••••••">
-            </div>
-            
-            <button onclick="autenticar('login')" style="margin-top: 10px; box-shadow: 0 4px 15px rgba(255, 102, 0, 0.4);">Entrar no Sistema</button>
-            <button onclick="autenticar('register')" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.4); margin-top: 12px;">Registrar Novo</button>
+            <input type="text" id="user" placeholder="Usuário">
+            <input type="password" id="pass" placeholder="Senha">
+            <button onclick="autenticar('login')">Entrar</button>
+            <button onclick="autenticar('register')" style="background:none; border: 1px solid white; margin-top:10px">Registrar</button>
         </div>
     </div>
 
     <div id="painel" class="hidden">
         <div class="nav">
-            <div>MYMEDIA | <b>EXPEDIÇÃO</b></div>
+            <div>MYMEDIA | <b>ESTOQUE</b></div>
             <div style="display:flex; gap:8px;">
                 <button onclick="aba('estoque')" style="background:rgba(255,255,255,0.2); width:auto;">Estoque</button>
                 <button id="btn-hist-nav" class="hidden" onclick="aba('hist')" style="background:rgba(255,255,255,0.2); width:auto;">Histórico</button>
@@ -120,35 +102,34 @@
 
         <div id="aba-estoque" class="card">
             <div id="carrinho-area" class="hidden" style="background: #fff7ed; border: 2px dashed var(--primary); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
-                <h4 style="margin:0; color:var(--primary)">🛒 Pedido em Preparação</h4>
-                <div id="lista-carrinho" style="margin: 10px 0;"></div>
-                <div style="display:flex; gap:10px;">
-                    <button onclick="finalizarSaida()">Gerar PDF e Baixar</button>
-                    <button onclick="cancelarSaida()" style="background:#64748b">Limpar</button>
-                </div>
+                <h4 style="margin:0; color:var(--primary)">🛒 Itens Preparados</h4>
+                <div id="lista-carrinho" style="margin:10px 0"></div>
+                <button onclick="finalizarSaida()">Finalizar Saída</button>
+                <button onclick="cancelarSaida()" style="background:#64748b">Cancelar</button>
             </div>
 
             <div id="area-admin" class="hidden">
                 <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
-                    <div style="flex:1; min-width:100px"><label style="font-size:11px; font-weight:800; color:var(--primary)">Código</label><input type="text" id="p-cod" oninput="buscaAuto(this.value)"></div>
-                    <div style="flex:3; min-width:200px"><label style="font-size:11px; font-weight:800; color:var(--primary)">Nome do Produto</label><input type="text" id="p-nome"></div>
-                    <div style="flex:1; min-width:80px"><label style="font-size:11px; font-weight:800; color:var(--primary)">Qtd</label><input type="number" id="p-qtd" value="1"></div>
+                    <input type="text" id="p-cod" placeholder="Código" style="flex:1" oninput="buscaAuto(this.value)">
+                    <input type="text" id="p-nome" placeholder="Nome do Produto" style="flex:3">
+                    <input type="number" id="p-qtd" value="1" style="flex:1">
                 </div>
-                <div style="display:flex; gap:10px; margin-bottom:25px">
-                    <button onclick="lancar('ENTRADA')" style="background:var(--success)">+ Entrada</button>
-                    <button onclick="addCarrinho()">- Preparar Saída</button>
-                    <label style="background:#475569; color:white; padding:12px; border-radius:8px; cursor:pointer; font-weight:700; font-size:12px; text-align:center; flex:1">
-                        Excel <input type="file" accept=".xlsx" style="display:none" onchange="importarMassa(this)">
+                <div style="display:flex; gap:10px; margin-bottom:25px; flex-wrap:wrap">
+                    <button onclick="lancar('ENTRADA')" class="btn-success">+ Entrada</button>
+                    <button onclick="addCarrinho()">- Saída</button>
+                    <label style="background:#475569; color:white; padding:12px; border-radius:8px; cursor:pointer; font-weight:700; font-size:12px; flex:1; text-align:center">
+                        📥 Excel <input type="file" accept=".xlsx" style="display:none" onchange="importarMassa(this)">
                     </label>
+                    <button onclick="limparEstoqueTodo()" class="btn-danger" style="flex:1">⚠️ Limpar Todo Estoque</button>
                 </div>
             </div>
 
-            <input type="text" placeholder="🔍 Buscar por nome ou código..." onkeyup="filtrarLista(this.value)" style="border: 1px solid #e2e8f0;">
+            <input type="text" placeholder="🔍 Buscar..." onkeyup="filtrarLista(this.value)" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; box-sizing:border-box; margin-bottom:20px">
             <div id="corpo-estoque-lista"></div>
         </div>
 
         <div id="aba-hist" class="card hidden">
-            <h3>🕒 Registro de Movimentações</h3>
+            <h3>🕒 Histórico</h3>
             <div id="lista-hist-container"></div>
         </div>
     </div>
@@ -160,21 +141,17 @@
         async function autenticar(modo) {
             const u = document.getElementById('user').value.trim();
             const p = document.getElementById('pass').value;
-            if(!u || !p) return alert("Preencha os campos!");
             const res = await fetch(`${API}/auth/${modo}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({u, p}) });
             if(res.ok) {
-                if(modo === 'register') alert("Registrado com sucesso! Faça o login.");
+                if(modo === 'register') alert("Usuário MyMedia registrado!");
                 else {
                     userAtivo = await res.json();
                     document.getElementById('tela-login').style.display = 'none';
                     document.getElementById('painel').classList.remove('hidden');
-                    if(userAtivo.isadmin) { 
-                        document.getElementById('area-admin').classList.remove('hidden'); 
-                        document.getElementById('btn-hist-nav').classList.remove('hidden'); 
-                    }
+                    if(userAtivo.isadmin) { document.getElementById('area-admin').classList.remove('hidden'); document.getElementById('btn-hist-nav').classList.remove('hidden'); }
                     carregar();
                 }
-            } else alert("Falha na autenticação!");
+            } else alert("Erro no acesso!");
         }
 
         async function carregar() {
@@ -185,11 +162,11 @@
 
         function renderLista() {
             document.getElementById('corpo-estoque-lista').innerHTML = estoque.map(p => `
-                <div class="item-produto ${p.qtd <= p.min ? 'alerta' : ''}" data-busca="${p.cod} ${p.nome}">
+                <div class="item-produto" data-busca="${p.cod} ${p.nome}">
                     <div class="valor-nome">${p.nome}</div>
-                    <div class="dado-linha"><b>CÓDIGO:</b> ${p.cod}</div>
-                    <div class="dado-linha"><b>ESTOQUE ATUAL:</b> <span style="font-weight:800; color:var(--success)">${p.qtd}</span></div>
-                    ${userAtivo.isadmin ? `<button onclick="apagar('${p.cod}')" style="background:none; color:var(--danger); padding:0; width:fit-content; font-size:11px; margin-top:8px;">× Excluir Produto</button>` : ''}
+                    <div class="dado-linha"><b>Código:</b> ${p.cod}</div>
+                    <div class="dado-linha"><b>Qtd:</b> <span style="font-weight:800; color:var(--success)">${p.qtd}</span></div>
+                    ${userAtivo.isadmin ? `<button onclick="apagar('${p.cod}')" style="background:none; color:var(--danger); padding:0; width:fit-content; font-size:11px; margin-top:10px">Excluir</button>` : ''}
                 </div>
             `).join('');
         }
@@ -198,7 +175,7 @@
             const cod = document.getElementById('p-cod').value.trim();
             const qtd = parseInt(document.getElementById('p-qtd').value);
             const p = estoque.find(x => x.cod == cod);
-            if(!p || qtd > p.qtd) return alert("Quantidade indisponível!");
+            if(!p || qtd > p.qtd) return alert("Estoque insuficiente!");
             carrinho.push({ cod: p.cod, nome: p.nome, qtd: qtd });
             renderCarrinho();
             document.getElementById('carrinho-area').classList.remove('hidden');
@@ -206,7 +183,7 @@
 
         function renderCarrinho() {
             document.getElementById('lista-carrinho').innerHTML = carrinho.map((item, index) => `
-                <div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #fed7aa; font-weight:600;">
+                <div style="display:flex; justify-content:space-between; padding:5px; border-bottom:1px solid #ddd;">
                     <span>${item.nome} (x${item.qtd})</span>
                     <button onclick="carrinho.splice(${index},1); renderCarrinho();" style="background:none; color:red; width:auto; padding:0;">✖</button>
                 </div>
@@ -214,16 +191,15 @@
         }
 
         async function finalizarSaida() {
-            if(!confirm("Finalizar saída e gerar PDF?")) return;
             for(let item of carrinho) {
                 const ex = estoque.find(x => x.cod == item.cod);
                 await fetch(`${API}/estoque`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({...ex, qtd: ex.qtd - item.qtd}) });
                 await fetch(`${API}/historico`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod: item.cod, nome: item.nome, qtd: item.qtd, tipo_mov: 'SAÍDA', usuario: userAtivo.u}) });
             }
             const { jsPDF } = window.jspdf; const doc = new jsPDF();
-            doc.text("MYMEDIA - PEDIDO DE EXPEDIÇÃO", 15, 20);
-            doc.autoTable({ startY: 30, head: [['Cód', 'Produto', 'Qtd']], body: carrinho.map(i => [i.cod, i.nome, i.qtd]) });
-            doc.save('pedido_mymedia.pdf');
+            doc.text("MYMEDIA - PEDIDO", 10, 10);
+            doc.autoTable({ head: [['Cód', 'Produto', 'Qtd']], body: carrinho.map(i => [i.cod, i.nome, i.qtd]) });
+            doc.save('pedido.pdf');
             carrinho = []; document.getElementById('carrinho-area').classList.add('hidden'); carregar();
         }
 
@@ -233,11 +209,10 @@
             const cod = document.getElementById('p-cod').value.trim();
             const nome = document.getElementById('p-nome').value.trim();
             const qtd = parseInt(document.getElementById('p-qtd').value);
-            if(!cod || !nome) return;
             const ex = estoque.find(x => x.cod == cod);
             let finalQtd = (tipo === 'ENTRADA' && ex) ? ex.qtd + qtd : qtd;
             await fetch(`${API}/estoque`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod, nome, qtd: finalQtd, min: 5}) });
-            await fetch(`${API}/historico`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod, nome, qtd, tipo_mov: tipo, usuario: userAtivo.u}) });
+            await fetch(`${API}/historico`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod: cod, nome: nome, qtd: qtd, tipo_mov: tipo, usuario: userAtivo.u}) });
             carregar();
         }
 
@@ -265,13 +240,22 @@
             const h = await res.json();
             document.getElementById('lista-hist-container').innerHTML = h.reverse().map(x => `
                 <div style="background:#f8fafc; padding:12px; border-bottom:1px solid #eee; margin-bottom:8px; border-radius:10px;">
-                    <b style="color:var(--primary); font-size:16px">${x.nome}</b> <span style="font-size:12px; color:#94a3b8">[${x.cod}]</span><br>
-                    <small>${new Date(x.data).toLocaleString()} - <b style="color:${x.tipo_mov === 'ENTRADA' ? 'green' : 'red'}">${x.tipo_mov}</b> (${x.qtd})</small>
+                    <b style="color:var(--primary); font-size:16px">${x.nome}</b> <span style="font-size:11px">[${x.cod}]</span><br>
+                    <small>${new Date(x.data).toLocaleString()} - <b>${x.tipo_mov}</b> (${x.qtd})</small>
                 </div>
             `).join('');
         }
 
-        async function apagar(c) { if(confirm("Remover permanentemente?")) { await fetch(`${API}/estoque/${c}`, {method:'DELETE'}); carregar(); } }
+        async function apagar(c) { if(confirm("Apagar item?")) { await fetch(`${API}/estoque/${c}`, {method:'DELETE'}); carregar(); } }
+        
+        // FUNÇÃO DE LIMPAR TUDO CORRIGIDA
+        async function limparEstoqueTodo() { 
+            if(confirm("ATENÇÃO: Isso apagará TODO o estoque permanentemente. Confirma?")) { 
+                for(let p of estoque) await fetch(`${API}/estoque/${p.cod}`, {method:'DELETE'}); 
+                carregar(); 
+            } 
+        }
+
         function buscaAuto(c) { const p = estoque.find(x => x.cod == c.trim()); if(p) { document.getElementById('p-nome').value = p.nome; } }
         function filtrarLista(v) {
             const termo = v.toLowerCase();
