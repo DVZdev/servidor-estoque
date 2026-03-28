@@ -19,8 +19,16 @@
             --border: #e2e8f0;
         }
 
-        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: var(--text); }
         .hidden { display: none !important; }
+
+        /* TRADUTOR */
+        #google_translate_element { 
+            padding: 10px; 
+            text-align: right; 
+            background: #f8fafc; 
+            border-bottom: 1px solid var(--border);
+        }
 
         /* TELA DE LOGIN GLASS */
         #tela-login {
@@ -28,18 +36,19 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), 
+            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), 
                         url('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=2070&auto=format&fit=crop');
             background-size: cover;
             background-position: center;
         }
 
         .login-card {
-            background: rgba(255, 255, 255, 0.15); 
-            backdrop-filter: blur(15px); 
+            background: rgba(255, 255, 255, 0.12); 
+            backdrop-filter: blur(20px); 
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             padding: 40px;
-            border-radius: 24px;
+            border-radius: 28px;
             width: 90%;
             max-width: 380px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
@@ -48,91 +57,138 @@
         }
 
         .login-card input {
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.95);
             border: none;
-            padding: 12px;
-            border-radius: 8px;
+            padding: 14px;
+            border-radius: 12px;
             width: 100%;
             margin-bottom: 15px;
             box-sizing: border-box;
+            font-size: 14px;
         }
 
-        /* PAINEL */
-        #painel { padding: 15px; }
-        .card { background: white; padding: 25px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 20px; }
+        /* PAINEL INTERNO */
+        #painel { padding: 20px; max-width: 1200px; margin: 0 auto; }
+        .card { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 20px; 
+            border: 1px solid var(--border); 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            margin-bottom: 25px; 
+        }
         
         button { 
-            padding: 12px 20px; border-radius: 8px; border: none; cursor: pointer; 
-            font-weight: 700; color: white; background: var(--primary); transition: 0.2s;
+            padding: 12px 20px; border-radius: 10px; border: none; cursor: pointer; 
+            font-weight: 700; color: white; background: var(--primary); transition: 0.3s;
         }
-        button:hover { background: var(--primary-dark); transform: translateY(-1px); }
+        button:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255,102,0,0.3); }
         .btn-danger { background: var(--danger); }
         .btn-success { background: var(--success); }
 
-        .item-produto { background: white; padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 12px; }
-        .valor-nome { font-size: 20px; font-weight: 800; color: var(--primary); margin-bottom: 8px; }
-        .dado-linha { font-size: 14px; margin: 2px 0; color: #475569; }
-        .dado-linha b { color: #94a3b8; font-size: 11px; min-width: 100px; display: inline-block; text-transform: uppercase; }
+        /* LISTAGEM - NOME EM CIMA */
+        .item-produto { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 14px; 
+            border: 1px solid var(--border); 
+            margin-bottom: 15px;
+            transition: 0.2s;
+        }
+        .item-produto:hover { border-color: var(--primary); }
+        .valor-nome { font-size: 22px; font-weight: 800; color: var(--primary); margin-bottom: 8px; }
+        .dado-linha { font-size: 14px; margin: 4px 0; color: #475569; display: flex; align-items: center; }
+        .dado-linha b { color: #94a3b8; font-size: 11px; min-width: 110px; text-transform: uppercase; letter-spacing: 0.5px; }
 
-        .nav { display: flex; justify-content: space-between; align-items: center; background: var(--primary); color: white; padding: 15px 20px; border-radius: 12px; margin-bottom: 20px; }
+        .nav { 
+            display: flex; justify-content: space-between; align-items: center; 
+            background: var(--primary); color: white; padding: 20px 25px; border-radius: 18px; margin-bottom: 25px;
+            box-shadow: 0 10px 15px -3px rgba(255, 102, 0, 0.2);
+        }
+
+        input[type="text"], input[type="number"] {
+            padding: 12px; border: 2px solid #f1f5f9; border-radius: 10px; transition: 0.3s;
+        }
+        input:focus { border-color: var(--primary); outline: none; }
     </style>
 </head>
 <body>
 
+    <div id="google_translate_element"></div>
+
     <div id="tela-login">
         <div class="login-card">
-            <h1>MyMedia</h1>
-            <p>Controle de Expedição</p>
+            <h1 style="margin:0; font-size: 32px;">MyMedia</h1>
+            <p style="margin-bottom: 30px; opacity: 0.9;">Expedição e Logística</p>
             <input type="text" id="user" placeholder="Usuário">
             <input type="password" id="pass" placeholder="Senha">
-            <button onclick="autenticar('login')">Entrar</button>
-            <button onclick="autenticar('register')" style="background:none; border: 1px solid white; margin-top:10px">Registrar</button>
+            <button onclick="autenticar('login')">Acessar Sistema</button>
+            <button onclick="autenticar('register')" style="background:none; border: 1px solid rgba(255,255,255,0.4); margin-top:12px; font-size: 13px;">Criar nova conta</button>
         </div>
     </div>
 
     <div id="painel" class="hidden">
         <div class="nav">
-            <div>MYMEDIA | <b>ESTOQUE</b></div>
-            <div style="display:flex; gap:8px;">
-                <button onclick="aba('estoque')" style="background:rgba(255,255,255,0.2); width:auto;">Estoque</button>
-                <button id="btn-hist-nav" class="hidden" onclick="aba('hist')" style="background:rgba(255,255,255,0.2); width:auto;">Histórico</button>
-                <button onclick="location.reload()" style="background:white; color:var(--primary); width:auto;">Sair</button>
+            <div>MYMEDIA | <b>EXPEDIÇÃO</b></div>
+            <div style="display:flex; gap:10px;">
+                <button onclick="aba('estoque')" style="background:rgba(255,255,255,0.2); box-shadow:none;">Estoque</button>
+                <button id="btn-hist-nav" class="hidden" onclick="aba('hist')" style="background:rgba(255,255,255,0.2); box-shadow:none;">Histórico</button>
+                <button onclick="location.reload()" style="background:white; color:var(--primary);">Sair</button>
             </div>
         </div>
 
         <div id="aba-estoque" class="card">
-            <div id="carrinho-area" class="hidden" style="background: #fff7ed; border: 2px dashed var(--primary); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
-                <h4 style="margin:0; color:var(--primary)">🛒 Itens Preparados</h4>
-                <div id="lista-carrinho" style="margin:10px 0"></div>
-                <button onclick="finalizarSaida()">Finalizar Saída</button>
-                <button onclick="cancelarSaida()" style="background:#64748b">Cancelar</button>
+            <div id="carrinho-area" class="hidden" style="background: #fff7ed; border: 2px dashed var(--primary); padding: 20px; border-radius: 15px; margin-bottom: 25px;">
+                <h4 style="margin:0 0 10px 0; color:var(--primary)">🛒 Itens para Baixa</h4>
+                <div id="lista-carrinho"></div>
+                <div style="margin-top:15px; display:flex; gap:10px">
+                    <button onclick="finalizarSaida()">Confirmar e Gerar PDF</button>
+                    <button onclick="cancelarSaida()" style="background:#64748b">Cancelar</button>
+                </div>
             </div>
 
             <div id="area-admin" class="hidden">
-                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
-                    <input type="text" id="p-cod" placeholder="Código" style="flex:1" oninput="buscaAuto(this.value)">
-                    <input type="text" id="p-nome" placeholder="Nome do Produto" style="flex:3">
-                    <input type="number" id="p-qtd" value="1" style="flex:1">
+                <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;">
+                    <div style="flex:1; min-width:120px">
+                        <label style="font-size:11px; font-weight:800; color:var(--primary)">CÓDIGO</label>
+                        <input type="text" id="p-cod" style="width:100%" oninput="buscaAuto(this.value)">
+                    </div>
+                    <div style="flex:3; min-width:200px">
+                        <label style="font-size:11px; font-weight:800; color:var(--primary)">NOME DO PRODUTO</label>
+                        <input type="text" id="p-nome" style="width:100%">
+                    </div>
+                    <div style="flex:1; min-width:80px">
+                        <label style="font-size:11px; font-weight:800; color:var(--primary)">QTD</label>
+                        <input type="number" id="p-qtd" value="1" style="width:100%">
+                    </div>
                 </div>
-                <div style="display:flex; gap:10px; margin-bottom:25px; flex-wrap:wrap">
-                    <button onclick="lancar('ENTRADA')" class="btn-success">+ Entrada</button>
-                    <button onclick="addCarrinho()">- Saída</button>
-                    <label style="background:#475569; color:white; padding:12px; border-radius:8px; cursor:pointer; font-weight:700; font-size:12px; flex:1; text-align:center">
-                        📥 Excel <input type="file" accept=".xlsx" style="display:none" onchange="importarMassa(this)">
+                <div style="display:flex; gap:12px; margin-bottom:30px; flex-wrap:wrap">
+                    <button onclick="lancar('ENTRADA')" class="btn-success">Adicionar Entrada</button>
+                    <button onclick="addCarrinho()">Preparar Saída</button>
+                    <label style="background:#475569; color:white; padding:12px 20px; border-radius:10px; cursor:pointer; font-weight:700; font-size:13px; text-align:center">
+                        📥 Importar Excel <input type="file" accept=".xlsx" style="display:none" onchange="importarMassa(this)">
                     </label>
-                    <button onclick="limparEstoqueTodo()" class="btn-danger" style="flex:1">⚠️ Limpar Todo Estoque</button>
+                    <button onclick="limparEstoqueTodo()" class="btn-danger">⚠️ Limpar Tudo</button>
                 </div>
             </div>
 
-            <input type="text" placeholder="🔍 Buscar..." onkeyup="filtrarLista(this.value)" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; box-sizing:border-box; margin-bottom:20px">
+            <h3 style="border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">Inventário MyMedia</h3>
+            <input type="text" placeholder="🔍 Pesquisar por nome ou código..." onkeyup="filtrarLista(this.value)" style="width:100%; margin: 20px 0; box-sizing: border-box;">
             <div id="corpo-estoque-lista"></div>
         </div>
 
         <div id="aba-hist" class="card hidden">
-            <h3>🕒 Histórico</h3>
+            <h3>🕒 Histórico de Movimentações</h3>
             <div id="lista-hist-container"></div>
         </div>
     </div>
+
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({pageLanguage: 'pt', layout: google.translate.TranslateElement.InlineLayout.SIMPLE}, 'google_translate_element');
+        }
+    </script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
     <script>
         const API = 'https://servidor-estoque-8g56.onrender.com';
@@ -143,15 +199,18 @@
             const p = document.getElementById('pass').value;
             const res = await fetch(`${API}/auth/${modo}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({u, p}) });
             if(res.ok) {
-                if(modo === 'register') alert("Usuário MyMedia registrado!");
+                if(modo === 'register') alert("Usuário MyMedia registrado com sucesso! Agora faça o login.");
                 else {
                     userAtivo = await res.json();
                     document.getElementById('tela-login').style.display = 'none';
                     document.getElementById('painel').classList.remove('hidden');
-                    if(userAtivo.isadmin) { document.getElementById('area-admin').classList.remove('hidden'); document.getElementById('btn-hist-nav').classList.remove('hidden'); }
+                    if(userAtivo.isadmin) { 
+                        document.getElementById('area-admin').classList.remove('hidden'); 
+                        document.getElementById('btn-hist-nav').classList.remove('hidden'); 
+                    }
                     carregar();
                 }
-            } else alert("Erro no acesso!");
+            } else alert("Erro na autenticação.");
         }
 
         async function carregar() {
@@ -165,8 +224,8 @@
                 <div class="item-produto" data-busca="${p.cod} ${p.nome}">
                     <div class="valor-nome">${p.nome}</div>
                     <div class="dado-linha"><b>Código:</b> ${p.cod}</div>
-                    <div class="dado-linha"><b>Qtd:</b> <span style="font-weight:800; color:var(--success)">${p.qtd}</span></div>
-                    ${userAtivo.isadmin ? `<button onclick="apagar('${p.cod}')" style="background:none; color:var(--danger); padding:0; width:fit-content; font-size:11px; margin-top:10px">Excluir</button>` : ''}
+                    <div class="dado-linha"><b>Qtd Disponível:</b> <span style="font-weight:800; color:var(--success); font-size:16px">${p.qtd}</span></div>
+                    ${userAtivo.isadmin ? `<button onclick="apagar('${p.cod}')" style="background:none; color:var(--danger); padding:0; width:fit-content; font-size:11px; margin-top:10px">Remover do Inventário</button>` : ''}
                 </div>
             `).join('');
         }
@@ -183,7 +242,7 @@
 
         function renderCarrinho() {
             document.getElementById('lista-carrinho').innerHTML = carrinho.map((item, index) => `
-                <div style="display:flex; justify-content:space-between; padding:5px; border-bottom:1px solid #ddd;">
+                <div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #ddd; font-weight:600;">
                     <span>${item.nome} (x${item.qtd})</span>
                     <button onclick="carrinho.splice(${index},1); renderCarrinho();" style="background:none; color:red; width:auto; padding:0;">✖</button>
                 </div>
@@ -197,9 +256,9 @@
                 await fetch(`${API}/historico`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod: item.cod, nome: item.nome, qtd: item.qtd, tipo_mov: 'SAÍDA', usuario: userAtivo.u}) });
             }
             const { jsPDF } = window.jspdf; const doc = new jsPDF();
-            doc.text("MYMEDIA - PEDIDO", 10, 10);
-            doc.autoTable({ head: [['Cód', 'Produto', 'Qtd']], body: carrinho.map(i => [i.cod, i.nome, i.qtd]) });
-            doc.save('pedido.pdf');
+            doc.text("MYMEDIA - PEDIDO DE SAÍDA", 15, 20);
+            doc.autoTable({ startY: 30, head: [['Cód', 'Produto', 'Qtd']], body: carrinho.map(i => [i.cod, i.nome, i.qtd]) });
+            doc.save('pedido_mymedia.pdf');
             carrinho = []; document.getElementById('carrinho-area').classList.add('hidden'); carregar();
         }
 
@@ -239,18 +298,17 @@
             const res = await fetch(`${API}/historico`);
             const h = await res.json();
             document.getElementById('lista-hist-container').innerHTML = h.reverse().map(x => `
-                <div style="background:#f8fafc; padding:12px; border-bottom:1px solid #eee; margin-bottom:8px; border-radius:10px;">
-                    <b style="color:var(--primary); font-size:16px">${x.nome}</b> <span style="font-size:11px">[${x.cod}]</span><br>
-                    <small>${new Date(x.data).toLocaleString()} - <b>${x.tipo_mov}</b> (${x.qtd})</small>
+                <div style="background:#f8fafc; padding:15px; border-bottom:1px solid #eee; margin-bottom:10px; border-radius:12px;">
+                    <b style="color:var(--primary); font-size:18px">${x.nome}</b> <span style="font-size:12px; color:#94a3b8">[${x.cod}]</span><br>
+                    <small>${new Date(x.data).toLocaleString()} - <b style="color:${x.tipo_mov === 'ENTRADA' ? 'green' : 'red'}">${x.tipo_mov}</b> de ${x.qtd} unid. (Por: ${x.usuario})</small>
                 </div>
             `).join('');
         }
 
-        async function apagar(c) { if(confirm("Apagar item?")) { await fetch(`${API}/estoque/${c}`, {method:'DELETE'}); carregar(); } }
+        async function apagar(c) { if(confirm("Remover item?")) { await fetch(`${API}/estoque/${c}`, {method:'DELETE'}); carregar(); } }
         
-        // FUNÇÃO DE LIMPAR TUDO CORRIGIDA
         async function limparEstoqueTodo() { 
-            if(confirm("ATENÇÃO: Isso apagará TODO o estoque permanentemente. Confirma?")) { 
+            if(confirm("ALERTA: Isso apagará TODO o estoque. Deseja continuar?")) { 
                 for(let p of estoque) await fetch(`${API}/estoque/${p.cod}`, {method:'DELETE'}); 
                 carregar(); 
             } 
