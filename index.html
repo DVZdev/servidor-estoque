@@ -19,16 +19,27 @@
             --border: #e2e8f0;
         }
 
-        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: var(--text); }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; 
+            color: var(--text);
+            /* OPÇÃO 1 PARA A TELA INTERNA (com overlay para leitura) */
+            background: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), 
+                        url('https://images.unsplash.com/photo-1605379399642-870262d3d051?q=80&w=1900&auto=format&fit=crop') no-repeat center center fixed;
+            background-size: cover;
+        }
+
         .hidden { display: none !important; }
 
-        #google_translate_element { padding: 10px; text-align: right; background: #f8fafc; border-bottom: 1px solid var(--border); }
+        #google_translate_element { padding: 10px; text-align: right; background: rgba(248, 250, 252, 0.9); border-bottom: 1px solid var(--border); }
 
-        /* LOGIN GLASS */
+        /* TELA DE LOGIN - OPÇÃO 3 */
         #tela-login {
             height: 100vh; display: flex; align-items: center; justify-content: center;
-            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=2070&auto=format&fit=crop');
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), 
+                        url('https://images.unsplash.com/photo-1579547621453-625d5d6c8e31?q=80&w=1900&auto=format&fit=crop');
             background-size: cover; background-position: center;
+            position: fixed; width: 100%; top: 0; left: 0; z-index: 1000;
         }
         .login-card {
             background: rgba(255, 255, 255, 0.12); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
@@ -38,25 +49,17 @@
         .login-card input { background: rgba(255, 255, 255, 0.95); border: none; padding: 14px; border-radius: 12px; width: 100%; margin-bottom: 15px; box-sizing: border-box; }
 
         /* PAINEL */
-        #painel { padding: 20px; max-width: 1200px; margin: 0 auto; }
-        .card { background: white; padding: 25px; border-radius: 20px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        #painel { padding: 20px; max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
+        .card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); padding: 25px; border-radius: 20px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 25px; }
         
         button { padding: 12px 20px; border-radius: 10px; border: none; cursor: pointer; font-weight: 700; color: white; background: var(--primary); transition: 0.3s; }
         button:hover { background: var(--primary-dark); transform: translateY(-2px); }
         .btn-danger { background: var(--danger); }
         .btn-success { background: var(--success); }
 
-        /* FORMULÁRIO DE ENTRADA */
         .admin-form { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
-        .admin-form input { 
-            padding: 12px; 
-            border: 2px solid #f1f5f9; 
-            border-radius: 10px; 
-            box-sizing: border-box; 
-            font-family: inherit;
-        }
+        .admin-form input { padding: 12px; border: 2px solid #f1f5f9; border-radius: 10px; box-sizing: border-box; font-family: inherit; background: white; }
 
-        /* LISTA DE PRODUTOS */
         .item-produto { background: white; padding: 20px; border-radius: 14px; border: 1px solid var(--border); margin-bottom: 15px; }
         .item-produto.alerta { border-left: 6px solid var(--danger); }
         .valor-nome { font-size: 22px; font-weight: 800; color: var(--primary); margin-bottom: 8px; }
@@ -114,11 +117,11 @@
                     <label style="background:#475569; color:white; padding:12px 25px; border-radius:10px; cursor:pointer; font-weight:700; font-size:12px; width: fit-content;">
                         Excel <input type="file" accept=".xlsx" style="display:none" onchange="importarMassa(this)">
                     </label>
-                    <button onclick="limparEstoqueTodo()" class="btn-danger">Limpar Estoque</button>
+                    <button onclick="limparEstoqueTodo()" class="btn-danger">Zerar Tudo</button>
                 </div>
             </div>
 
-            <input type="text" placeholder="🔍 Buscar..." onkeyup="filtrarLista(this.value)" style="width:100%; box-sizing:border-box; padding: 12px; border-radius: 10px; border: 2px solid #f1f5f9; margin-bottom:20px">
+            <input type="text" placeholder="🔍 Buscar..." onkeyup="filtrarLista(this.value)" style="width:100%; box-sizing:border-box; padding: 12px; border-radius: 10px; border: 2px solid #f1f5f9; margin-bottom:20px; background:white;">
             <div id="corpo-estoque-lista"></div>
         </div>
 
@@ -145,7 +148,7 @@
                 if(modo === 'register') alert("Registrado!");
                 else {
                     userAtivo = await res.json();
-                    document.getElementById('tela-login').style.display = 'none';
+                    document.getElementById('tela-login').classList.add('hidden');
                     document.getElementById('painel').classList.remove('hidden');
                     if(userAtivo.isadmin) { document.getElementById('area-admin').classList.remove('hidden'); document.getElementById('btn-hist-nav').classList.remove('hidden'); }
                     carregar();
@@ -234,7 +237,7 @@
             const res = await fetch(`${API}/historico`);
             const h = await res.json();
             document.getElementById('lista-hist-container').innerHTML = h.reverse().map(x => `
-                <div style="background:#f8fafc; padding:15px; border-bottom:1px solid #eee; margin-bottom:10px; border-radius:12px;">
+                <div style="background:rgba(248, 250, 252, 0.9); padding:15px; border-bottom:1px solid #eee; margin-bottom:10px; border-radius:12px;">
                     <b style="color:var(--primary); font-size:18px">${x.nome}</b> [${x.cod}]<br>
                     <small>${new Date(x.data).toLocaleString()} - <b>${x.tipo_mov}</b> (${x.qtd})</small>
                 </div>
