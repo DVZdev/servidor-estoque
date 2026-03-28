@@ -15,6 +15,7 @@
         button:hover { opacity: 0.9; }
         .user-header { display: flex; justify-content: space-between; align-items: center; background: var(--primary); color: white; padding: 15px 25px; border-radius: 8px; margin-bottom: 20px; }
         .layout { display: grid; grid-template-columns: 1fr 380px; gap: 20px; }
+        .alerta-minimo { background: #fff1f2 !important; border-left: 5px solid var(--danger); }
         #admin-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 9999; }
         .modal-content { background: white; padding: 30px; border-radius: 12px; width: 500px; max-height: 80vh; overflow-y: auto; position: relative; }
     </style>
@@ -53,39 +54,63 @@
         <div>👤 <strong id="display-username">---</strong></div>
         <div style="display:flex; gap:10px">
             <button id="btn-admin-trigger" onclick="abrirAdmin()" class="hidden" style="background:#475569">⚙️ Admin</button>
+            <button onclick="document.getElementById('csvInput').click()" style="background:#0ea5e9">📥 Importar Excel</button>
+            <input type="file" id="csvInput" class="hidden" accept=".csv" onchange="importarCSV(event)">
             <button onclick="carregarEstoque()" style="background:var(--success)">🔄 Atualizar</button>
             <button onclick="location.reload()" style="background:var(--danger)">Sair</button>
         </div>
     </header>
 
     <div class="layout">
-        <div class="card">
-            <h3>📊 Inventário</h3>
-            <table style="width:100%; border-collapse: collapse;">
-                <thead><tr style="text-align:left;"><th>Cód</th><th>Item</th><th>Qtd</th><th>Tipo</th><th>Ações</th></tr></thead>
-                <tbody id="corpo-estoque"></tbody>
-            </table>
+        <div>
+            <div class="card">
+                <h3>📦 Movimentação</h3>
+                <div style="display: grid; grid-template-columns: 120px 1fr 100px 100px 100px; gap: 10px; align-items: end;">
+                    <div>Cód:<input type="text" id="p-cod" placeholder="Código"></div>
+                    <div>Produto:<input type="text" id="p-nome"></div>
+                    <div>Qtd:<input type="number" id="p-qtd" value="1"></div>
+                    <div>Tipo:<select id="p-tipo"><option value="un">UN</option><option value="pct">PCT</option></select></div>
+                    <div>Mín:<input type="number" id="p-min" value="5"></div>
+                </div>
+                <div style="margin-top: 15px; display: flex; gap: 10px;">
+                    <button onclick="movimentarEntrada()" style="flex:1; background:var(--success)">➕ Salvar no Banco</button>
+                    <button onclick="addPedido()" style="flex:1; background:var(--accent)">📝 Adicionar ao Pedido</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📊 Inventário</h3>
+                <input type="text" id="busca" placeholder="Filtrar por nome ou código..." onkeyup="render()">
+                <table style="width:100%; border-collapse: collapse; margin-top:10px;">
+                    <thead><tr style="text-align:left;"><th>Cód</th><th>Item</th><th>Qtd</th><th>Tipo</th><th>Ações</th></tr></thead>
+                    <tbody id="corpo-estoque"></tbody>
+                </table>
+            </div>
         </div>
-        <div class="card">
+
+        <div class="card" style="border-top: 5px solid var(--warning);">
             <h3>📋 Lista de Pedido</h3>
-            <div id="lista-pedido"></div>
+            <div id="lista-pedido" style="min-height: 50px; margin-bottom: 10px;"></div>
+            <div id="footer-pedido" class="hidden">
+                <input type="text" id="destino-pedido" placeholder="Destino do Pedido">
+                <button onclick="finalizarPedido()" style="width:100%; background:var(--danger); margin-top:10px;">Finalizar Pedido (PDF)</button>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    // AJUSTE AQUI: Cole o link do seu Render dentro das aspas abaixo
     const API_URL = 'https://servidor-estoque-8g56.onrender.com'; 
 
     let estoque = [];
     let pedidoAtual = [];
     let usuarioLogado = null;
 
+    // --- AUTENTICAÇÃO ---
     async function autenticar(modo) {
         const u = document.getElementById('auth-user').value.trim();
         const p = document.getElementById('auth-pass').value;
         if(!u || !p) return alert("Preencha tudo!");
-
         const rota = modo === 'register' ? '/auth/register' : '/auth/login';
         try {
             const res = await fetch(`${API_URL}${rota}`, {
@@ -94,13 +119,10 @@
                 body: JSON.stringify({ u, p })
             });
             if(res.ok) {
-                if(modo === 'register') alert("Registrado! Agora faça login.");
-                else {
-                    usuarioLogado = await res.json();
-                    entrarNoApp();
-                }
-            } else { alert("Erro na autenticação."); }
-        } catch(e) { alert("Servidor offline ou link errado."); }
+                if(modo === 'register') alert("Registrado com sucesso!");
+                else { usuarioLogado = await res.json(); entrarNoApp(); }
+            } else { alert("Usuário ou senha incorretos."); }
+        } catch(e) { alert("Erro de conexão."); }
     }
 
     function entrarNoApp() {
@@ -111,63 +133,33 @@
         carregarEstoque();
     }
 
+    // --- ESTOQUE E BUSCA ---
     async function carregarEstoque() {
         try {
             const res = await fetch(`${API_URL}/estoque`);
             estoque = await res.json();
             render();
-        } catch(e) { console.error("Erro ao carregar banco."); }
+        } catch(e) { console.error(e); }
     }
 
     function render() {
+        const busca = document.getElementById('busca').value.toLowerCase();
         const corpo = document.getElementById('corpo-estoque');
-        corpo.innerHTML = estoque.map(p => `
-            <tr>
-                <td>${p.cod}</td><td>${p.nome}</td><td>${p.qtd}</td><td>${p.tipo}</td>
-                <td><button onclick="excluirItem('${p.cod}')" style="background:none; color:red">✖</button></td>
-            </tr>
-        `).join('');
+        corpo.innerHTML = '';
+        estoque.forEach(p => {
+            if(p.nome.toLowerCase().includes(busca) || p.cod.includes(busca)) {
+                const critico = parseInt(p.qtd) <= parseInt(p.min);
+                corpo.innerHTML += `<tr class="${critico ? 'alerta-minimo' : ''}">
+                    <td style="padding:8px">${p.cod}</td><td>${p.nome}</td><td>${p.qtd}</td><td>${p.tipo}</td>
+                    <td><button onclick="excluirItem('${p.cod}')" style="background:none; color:red">✖</button></td>
+                </tr>`;
+            }
+        });
     }
 
-    async function abrirAdmin() {
-        document.getElementById('admin-modal').classList.remove('hidden');
-        const lista = document.getElementById('lista-usuarios-admin');
-        lista.innerHTML = '<tr><td>Carregando...</td></tr>';
-        try {
-            const res = await fetch(`${API_URL}/auth/users`);
-            const users = await res.json();
-            lista.innerHTML = users.map(user => `
-                <tr style="border-bottom: 1px solid #eee;">
-                    <td style="padding:10px">👤 ${user.u} ${user.isadmin ? '<b>(ADM)</b>' : ''}</td>
-                    <td style="text-align:right">
-                        <button onclick="mudarSenha('${user.u}')" style="background:var(--warning); font-size:11px">Senha</button>
-                        ${user.u !== usuarioLogado.u ? `<button onclick="removerUsuario('${user.u}')" style="background:var(--danger); font-size:11px">Excluir</button>` : ''}
-                    </td>
-                </tr>
-            `).join('');
-        } catch (e) { alert("Erro ao carregar usuários."); }
-    }
-
-    function fecharAdmin() { document.getElementById('admin-modal').classList.add('hidden'); }
-
-    async function removerUsuario(nome) {
-        if(confirm(`Excluir ${nome}?`)) {
-            await fetch(`${API_URL}/auth/users/${nome}`, { method: 'DELETE' });
-            abrirAdmin();
-        }
-    }
-
-    async function mudarSenha(nome) {
-        const nova = prompt(`Nova senha para ${nome}:`);
-        if(nova) {
-            await fetch(`${API_URL}/auth/users/password`, {
-                method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ u: nome, newPassword: nova })
-            });
-            alert("Senha alterada!");
-        }
-    }
-</script>
-</body>
-</html>
+    async function movimentarEntrada() {
+        const item = {
+            cod: document.getElementById('p-cod').value.trim(),
+            nome: document.getElementById('p-nome').value.trim(),
+            qtd: parseInt(document.getElementById('p-qtd').value),
+            tipo: document
