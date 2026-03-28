@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Expedição v42</title>
+    <title>Sistema de Expedição v44</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -14,26 +14,20 @@
         .hidden { display: none !important; }
         #google_translate_element { margin-bottom: 15px; text-align: right; }
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        
-        /* Painel de Lançamento */
         .painel-horizontal { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; align-items: flex-end; }
         .campo-box { display: flex; flex-direction: column; gap: 5px; }
         .campo-box label { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; }
-        input { padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; }
+        input { padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; width: 100%; box-sizing: border-box; }
         button { padding: 10px 18px; border-radius: 6px; border: none; cursor: pointer; font-weight: 700; color: white; background: var(--accent); }
-
-        /* Layout do Inventário (Cartões Individuais) */
-        #corpo-estoque-lista { display: flex; flex-direction: column; gap: 15px; }
-        .item-produto { background: white; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 5px; }
-        .item-produto.alerta { border-left: 6px solid var(--danger); }
-        .valor-nome { font-size: 18px; font-weight: 800; color: var(--primary); }
-        .dado-linha { font-size: 14px; color: #334155; }
-        .dado-linha b { min-width: 90px; display: inline-block; color: #64748b; font-size: 11px; }
-
-        /* Carrinho de Saída */
         #carrinho-area { background: #fffbeb; border: 2px dashed var(--warning); padding: 15px; border-radius: 10px; margin-bottom: 20px; }
-        .item-carrinho { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #fde68a; }
-
+        .item-carrinho { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #fde68a; font-weight: 600; }
+        #corpo-estoque-lista { display: flex; flex-direction: column; gap: 12px; }
+        .item-produto { background: white; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 4px; }
+        .item-produto.alerta { border-left: 6px solid var(--danger); background: #fff1f2; }
+        .valor-nome { font-size: 18px; font-weight: 800; color: var(--primary); }
+        .dado-linha { font-size: 14px; color: #334155; display: flex; }
+        .dado-linha b { min-width: 90px; color: #64748b; font-size: 11px; text-transform: uppercase; }
+        .valor-qtd { font-weight: 800; color: var(--success); }
         .nav { display: flex; justify-content: space-between; align-items: center; background: var(--primary); color: white; padding: 15px 20px; border-radius: 12px; margin-bottom: 20px; }
     </style>
 </head>
@@ -44,8 +38,8 @@
     <div id="tela-login">
         <div class="card" style="max-width: 380px; margin: 60px auto;">
             <h2 style="text-align:center">Acesso</h2>
-            <input type="text" id="user" placeholder="Usuário" style="width:100%; margin-bottom:10px">
-            <input type="password" id="pass" placeholder="Senha" style="width:100%; margin-bottom:20px">
+            <div class="campo-box" style="margin-bottom:15px"><label>Usuário</label><input type="text" id="user"></div>
+            <div class="campo-box" style="margin-bottom:20px"><label>Senha</label><input type="password" id="pass"></div>
             <button onclick="autenticar('login')" style="width:100%; margin-bottom:10px">Entrar</button>
             <button onclick="autenticar('register')" style="width:100%; background:var(--success)">Registrar Novo</button>
         </div>
@@ -55,9 +49,9 @@
         <div class="nav">
             <div>📦 <b>Expedição</b> | <span id="nome-exibir"></span></div>
             <div style="display:flex; gap:8px">
-                <button onclick="aba('estoque')" style="font-size:12px">Estoque</button>
-                <button id="btn-hist-nav" class="hidden" onclick="aba('hist')" style="font-size:12px">Histórico</button>
-                <button onclick="location.reload()" style="background:var(--danger); font-size:12px">Sair</button>
+                <button onclick="aba('estoque')">Estoque</button>
+                <button id="btn-hist-nav" class="hidden" onclick="aba('hist')">Histórico</button>
+                <button onclick="location.reload()" style="background:var(--danger)">Sair</button>
             </div>
         </div>
 
@@ -66,18 +60,18 @@
                 <h4 style="margin:0 0 10px 0; color:var(--warning)">🛒 Itens para Saída</h4>
                 <div id="lista-carrinho"></div>
                 <div style="margin-top:15px; display:flex; gap:10px">
-                    <button onclick="finalizarSaida()" style="background:var(--warning)">Finalizar e Gerar PDF</button>
-                    <button onclick="cancelarSaida()" style="background:#64748b">Cancelar</button>
+                    <button onclick="finalizarSaida()" style="background:var(--warning)">Gerar Pedido e Dar Baixa</button>
+                    <button onclick="cancelarSaida()" style="background:#64748b">Limpar</button>
                 </div>
             </div>
 
             <div id="area-admin" class="hidden">
                 <h4 style="margin-top:0">⚙️ Lançamento</h4>
                 <div class="painel-horizontal">
-                    <div class="campo-box"><label>Código</label><input type="text" id="p-cod" oninput="buscaAuto(this.value)"></div>
-                    <div class="campo-box"><label>Nome</label><input type="text" id="p-nome" style="width:250px"></div>
-                    <div class="campo-box"><label>Qtd</label><input type="number" id="p-qtd" value="1"></div>
-                    <div class="campo-box"><label>Mín</label><input type="number" id="p-min" value="5"></div>
+                    <div class="campo-box" style="width:120px"><label>Código</label><input type="text" id="p-cod" oninput="buscaAuto(this.value)"></div>
+                    <div class="campo-box" style="width:250px"><label>Nome do Produto</label><input type="text" id="p-nome"></div>
+                    <div class="campo-box" style="width:80px"><label>Qtd</label><input type="number" id="p-qtd" value="1"></div>
+                    <div class="campo-box" style="width:80px"><label>Mín</label><input type="number" id="p-min" value="5"></div>
                 </div>
                 <div style="display:flex; gap:10px; flex-wrap: wrap; margin-bottom: 25px;">
                     <button onclick="lancar('ENTRADA')" style="background:var(--success)">+ Entrada</button>
@@ -91,13 +85,13 @@
             </div>
 
             <h3>📊 Inventário Geral</h3>
-            <input type="text" placeholder="Filtrar por nome ou código..." onkeyup="filtrarLista(this.value)" style="width:100%; margin-bottom:20px">
+            <input type="text" placeholder="Pesquisar..." onkeyup="filtrarLista(this.value)" style="margin-bottom:20px">
             <div id="corpo-estoque-lista"></div>
         </div>
 
         <div id="aba-hist" class="card hidden">
-            <h3>🕒 Histórico</h3>
-            <div id="corpo-hist"></div>
+            <h3>🕒 Histórico de Movimentações</h3>
+            <div id="lista-hist-container" style="display:flex; flex-direction:column; gap:8px"></div>
         </div>
     </div>
 
@@ -123,7 +117,7 @@
                 document.getElementById('nome-exibir').innerText = userAtivo.u;
                 if(userAtivo.isadmin) { document.getElementById('area-admin').classList.remove('hidden'); document.getElementById('btn-hist-nav').classList.remove('hidden'); }
                 carregar();
-            } else alert("Erro no Login");
+            } else alert("Falha no acesso!");
         }
 
         async function carregar() {
@@ -138,22 +132,18 @@
                 <div class="item-produto ${p.qtd <= p.min ? 'alerta' : ''}" data-busca="${p.cod} ${p.nome}">
                     <div class="valor-nome">${p.nome}</div>
                     <div class="dado-linha"><b>CÓDIGO:</b> ${p.cod}</div>
-                    <div class="dado-linha"><b>QTD ATUAL:</b> <span style="font-weight:bold; color:var(--success)">${p.qtd}</span></div>
+                    <div class="dado-linha"><b>ESTOQUE:</b> <span class="valor-qtd">${p.qtd}</span></div>
                     <div class="dado-linha"><b>MÍNIMO:</b> ${p.min}</div>
-                    ${userAtivo.isadmin ? `<button onclick="apagar('${p.cod}')" style="background:var(--danger); font-size:10px; width:fit-content; margin-top:5px">Remover</button>` : ''}
+                    ${userAtivo.isadmin ? `<button onclick="apagar('${p.cod}')" style="background:var(--danger); font-size:10px; width:fit-content; padding:5px; margin-top:5px">Excluir</button>` : ''}
                 </div>
             `).join('');
         }
 
-        // --- FUNÇÃO PREPARAR SAÍDA (CARRINHO) ---
         function addCarrinho() {
             const cod = document.getElementById('p-cod').value.trim();
             const qtd = parseInt(document.getElementById('p-qtd').value);
             const p = estoque.find(x => x.cod == cod);
-
-            if(!p) return alert("Produto não encontrado!");
-            if(qtd > p.qtd) return alert("Estoque insuficiente!");
-
+            if(!p || qtd > p.qtd) return alert("Erro no estoque!");
             carrinho.push({ cod: p.cod, nome: p.nome, qtd: qtd });
             renderCarrinho();
             document.getElementById('carrinho-area').classList.remove('hidden');
@@ -162,63 +152,37 @@
         function renderCarrinho() {
             const lista = document.getElementById('lista-carrinho');
             lista.innerHTML = carrinho.map((item, index) => `
-                <div class="item-carrinho">
-                    <span>${item.nome} (x${item.qtd})</span>
-                    <button onclick="removerDoCarrinho(${index})" style="background:none; color:red; padding:0">✖</button>
-                </div>
+                <div class="item-carrinho"><span>${item.nome} - Qtd: ${item.qtd}</span><button onclick="removerDoCarrinho(${index})" style="background:var(--danger); padding:2px 8px; font-size:11px">Remover</button></div>
             `).join('');
         }
 
-        function removerDoCarrinho(i) {
-            carrinho.splice(i, 1);
-            if(carrinho.length === 0) document.getElementById('carrinho-area').classList.add('hidden');
-            renderCarrinho();
-        }
+        function removerDoCarrinho(i) { carrinho.splice(i, 1); if(carrinho.length === 0) document.getElementById('carrinho-area').classList.add('hidden'); renderCarrinho(); }
 
         async function finalizarSaida() {
-            if(!confirm("Confirmar a saída desses itens?")) return;
-            
             for(let item of carrinho) {
                 const ex = estoque.find(x => x.cod == item.cod);
-                const novaQtd = ex.qtd - item.qtd;
-                
-                await fetch(`${API}/estoque`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({...ex, qtd: novaQtd}) });
+                await fetch(`${API}/estoque`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({...ex, qtd: ex.qtd - item.qtd}) });
                 await fetch(`${API}/historico`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod: item.cod, nome: item.nome, qtd: item.qtd, tipo_mov: 'SAÍDA', usuario: userAtivo.u}) });
             }
-
-            gerarPDFSaida();
-            carrinho = [];
-            document.getElementById('carrinho-area').classList.add('hidden');
-            carregar();
-            alert("Saída processada com sucesso!");
+            gerarPDF(); carrinho = []; document.getElementById('carrinho-area').classList.add('hidden'); carregar();
         }
 
-        function gerarPDFSaida() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.text("PEDIDO DE SAÍDA - EXPEDIÇÃO", 10, 10);
-            doc.text(`Data: ${new Date().toLocaleString()}`, 10, 20);
-            doc.autoTable({
-                startY: 30,
-                head: [['Código', 'Produto', 'Qtd']],
-                body: carrinho.map(i => [i.cod, i.nome, i.qtd])
-            });
-            doc.save(`pedido_${Date.now()}.pdf`);
+        function gerarPDF() {
+            const { jsPDF } = window.jspdf; const doc = new jsPDF();
+            doc.text("PEDIDO DE EXPEDIÇÃO", 15, 20);
+            doc.autoTable({ startY: 30, head: [['Cód', 'Produto', 'Qtd']], body: carrinho.map(i => [i.cod, i.nome, i.qtd]) });
+            doc.save(`pedido.pdf`);
         }
 
         function cancelarSaida() { carrinho = []; document.getElementById('carrinho-area').classList.add('hidden'); }
 
-        // --- OUTRAS FUNÇÕES ---
         async function lancar(tipo) {
             const cod = document.getElementById('p-cod').value.trim();
             const nome = document.getElementById('p-nome').value.trim();
             const qtd = parseInt(document.getElementById('p-qtd').value);
             const min = parseInt(document.getElementById('p-min').value) || 5;
-
-            if(!cod || !nome) return;
             const ex = estoque.find(x => x.cod == cod);
             let finalQtd = (tipo === 'ENTRADA' && ex) ? ex.qtd + qtd : qtd;
-
             await fetch(`${API}/estoque`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod, nome, qtd: finalQtd, min}) });
             await fetch(`${API}/historico`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod, nome, qtd, tipo_mov: tipo, usuario: userAtivo.u}) });
             carregar();
@@ -230,12 +194,9 @@
                 const wb = XLSX.read(new Uint8Array(e.target.result), {type: 'array'});
                 const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: ["cod", "nome", "qtd", "min"], range: 1});
                 for(const f of rows) {
-                    if(f.cod && f.nome) {
-                        await fetch(`${API}/estoque`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod: f.cod.toString(), nome: f.nome, qtd: parseInt(f.qtd), min: parseInt(f.min) || 5}) });
-                    }
+                    if(f.cod && f.nome) await fetch(`${API}/estoque`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod: f.cod.toString(), nome: f.nome, qtd: parseInt(f.qtd), min: parseInt(f.min) || 5}) });
                 }
                 carregar();
-                alert("Excel Importado!");
             };
             r.readAsArrayBuffer(input.files[0]);
         }
@@ -246,14 +207,21 @@
             if(t === 'hist') carregarHist();
         }
 
+        // --- HISTÓRICO ATUALIZADO COM O CÓDIGO DO PRODUTO ---
         async function carregarHist() {
             const res = await fetch(`${API}/historico`);
             const h = await res.json();
-            document.getElementById('corpo-hist').innerHTML = h.map(x => `<div style="font-size:12px; border-bottom:1px solid #eee; padding:5px">${new Date(x.data).toLocaleString()} - ${x.tipo_mov}: ${x.nome} (${x.qtd})</div>`).join('');
+            document.getElementById('lista-hist-container').innerHTML = h.reverse().map(x => `
+                <div style="background:#fff; padding:10px; border-radius:6px; border-bottom:2px solid #eee; font-size:13px">
+                    <b>${new Date(x.data).toLocaleString()}</b> | 
+                    <span style="color:${x.tipo_mov === 'ENTRADA' ? 'green' : 'red'}">${x.tipo_mov}</span>: 
+                    [${x.cod}] ${x.nome} (${x.qtd}) - Por: ${x.usuario}
+                </div>
+            `).join('');
         }
 
-        async function apagar(c) { if(confirm("Apagar?")) { await fetch(`${API}/estoque/${c}`, {method:'DELETE'}); carregar(); } }
-        async function limparEstoqueTodo() { if(confirm("Apagar TUDO?")) { for(let p of estoque) await fetch(`${API}/estoque/${p.cod}`, {method:'DELETE'}); carregar(); } }
+        async function apagar(c) { if(confirm("Remover?")) { await fetch(`${API}/estoque/${c}`, {method:'DELETE'}); carregar(); } }
+        async function limparEstoqueTodo() { if(confirm("Limpar Tudo?")) { for(let p of estoque) await fetch(`${API}/estoque/${p.cod}`, {method:'DELETE'}); carregar(); } }
         function buscaAuto(c) { const p = estoque.find(x => x.cod == c.trim()); if(p) { document.getElementById('p-nome').value = p.nome; document.getElementById('p-min').value = p.min; } }
         function filtrarLista(v) {
             const termo = v.toLowerCase();
