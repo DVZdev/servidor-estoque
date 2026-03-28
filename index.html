@@ -179,10 +179,61 @@
         carregarEstoque();
     }
 
-    async function abrirAdmin() {
-        document.getElementById('admin-modal').classList.remove('hidden');
-        const lista = document.getElementById('lista-usuarios-admin');
-        lista.innerHTML = `<tr><td style="padding:10px">${usuarioLogado.u} <b>(LOGADO)</b></td></tr>`;
+    // 1. Essa função limpa a lista e busca os dados REAIS do seu servidor no Render
+async function abrirAdmin() {
+    document.getElementById('admin-modal').classList.remove('hidden');
+    const lista = document.getElementById('lista-usuarios-admin');
+    lista.innerHTML = '<tr><td>Carregando usuários do banco...</td></tr>';
+
+    try {
+        const res = await fetch(`${API_URL}/auth/users`);
+        const users = await res.json();
+        
+        // Aqui o código cria a tabela com os botões de Senha e Excluir
+        lista.innerHTML = users.map(user => `
+            <tr style="border-bottom: 1px solid #eee;">
+                <td style="padding:10px">👤 ${user.u} ${user.isadmin ? '<b style="color:var(--accent)">(ADM)</b>' : ''}</td>
+                <td style="text-align:right">
+                    <button onclick="mudarSenha('${user.u}')" style="background:var(--warning); color:white; padding:5px 10px; font-size:11px; border-radius:4px;">Senha</button>
+                    
+                    ${user.u !== usuarioLogado.u ? 
+                        `<button onclick="removerUsuario('${user.u}')" style="background:var(--danger); color:white; padding:5px 10px; font-size:11px; margin-left:5px; border-radius:4px;">Excluir</button>` 
+                        : ''}
+                </td>
+            </tr>
+        `).join('');
+    } catch (e) { 
+        lista.innerHTML = '<tr><td>Erro ao conectar com o servidor.</td></tr>';
+    }
+}
+
+// 2. Essa função pergunta se você tem certeza e avisa o banco para deletar
+async function removerUsuario(nome) {
+    if(confirm(`Tem certeza que deseja excluir o usuário "${nome}"?`)) {
+        try {
+            const res = await fetch(`${API_URL}/auth/users/${nome}`, { method: 'DELETE' });
+            if(res.ok) {
+                alert("Usuário removido!");
+                abrirAdmin(); // Atualiza a lista na hora
+            }
+        } catch (e) { alert("Erro ao excluir."); }
+    }
+}
+
+// 3. Essa função abre uma caixinha para você digitar a nova senha
+async function mudarSenha(nome) {
+    const nova = prompt(`Digite a nova senha para o usuário "${nome}":`);
+    if(nova && nova.trim() !== "") {
+        try {
+            const res = await fetch(`${API_URL}/auth/users/password`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ u: nome, newPassword: nova })
+            });
+            if(res.ok) alert("Senha alterada com sucesso!");
+        } catch (e) { alert("Erro ao trocar senha."); }
+    }
+}
     }
     
     function fecharAdmin() { document.getElementById('admin-modal').classList.add('hidden'); }
