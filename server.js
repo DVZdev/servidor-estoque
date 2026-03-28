@@ -1,77 +1,84 @@
 const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
-
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
+// Conexão Segura com o Banco
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL, 
+  connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 });
 
-// --- NOVAS ROTAS DE ADMIN ---
-
-// Listar usuários
-app.get('/auth/users', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT u, isadmin FROM usuarios ORDER BY u ASC');
-    res.json(result.rows);
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-// Excluir usuário
-app.delete('/auth/users/:username', async (req, res) => {
-  try {
-    await pool.query('DELETE FROM usuarios WHERE u = $1', [req.params.username]);
-    res.sendStatus(200);
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-// Alterar senha
-app.put('/auth/users/password', async (req, res) => {
-  const { u, newPassword } = req.body;
-  try {
-    await pool.query('UPDATE usuarios SET p = $1 WHERE u = $2', [newPassword, u]);
-    res.sendStatus(200);
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-// --- MANTENDO AS ROTAS ANTERIORES ---
-app.post('/auth/register', async (req, res) => {
-  const { u, p } = req.body;
-  try {
-    const count = await pool.query('SELECT COUNT(*) FROM usuarios');
-    const isFirst = parseInt(count.rows[0].count) === 0;
-    await pool.query('INSERT INTO usuarios (u, p, isadmin) VALUES ($1, $2, $3)', [u, p, isFirst]);
-    res.sendStatus(201);
-  } catch (err) { res.status(400).json({ error: "Erro ao registrar" }); }
-});
-
-app.post('/auth/login', async (req, res) => {
-  const { u, p } = req.body;
-  try {
-    const result = await pool.query('SELECT * FROM usuarios WHERE u = $1 AND p = $2', [u, p]);
-    if (result.rows.length > 0) res.json(result.rows[0]);
-    else res.status(401).json({ error: "Incorreto" });
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
-
-// Rotas de estoque (Mantidas iguais ao que você já tem)
+// --- ROTAS DE ESTOQUE ---
 app.get('/estoque', async (req, res) => {
-  const r = await pool.query('SELECT * FROM estoque ORDER BY nome ASC');
-  res.json(r.rows);
+  const result = await pool.query('SELECT * FROM estoque ORDER BY nome ASC');
+  res.json(result.rows);
 });
+
 app.post('/estoque', async (req, res) => {
   const { cod, nome, qtd, tipo, min } = req.body;
-  await pool.query('INSERT INTO estoque (cod, nome, qtd, tipo, min) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (cod) DO UPDATE SET qtd = $3, nome = $2, min = $5', [cod, nome, qtd, tipo, min]);
+  await pool.query(
+    'INSERT INTO estoque (cod, nome, qtd, tipo, min) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (cod) DO UPDATE SET nome=$2, qtd=$3, tipo=$4, min=$5',
+    [cod, nome, qtd, tipo, min]
+  );
   res.sendStatus(200);
 });
+
 app.delete('/estoque/:cod', async (req, res) => {
   await pool.query('DELETE FROM estoque WHERE cod = $1', [req.params.cod]);
   res.sendStatus(200);
 });
 
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`🚀 Servidor na porta ${PORT}`));
+// --- ROTAS DE HISTÓRICO ---
+app.post('/historico', async (req, res) => {
+  const { cod, nome, qtd, tipo_mov, usuario, destino } = req.body;
+  await pool.query(
+    'INSERT INTO historico (cod, nome, qtd, tipo_mov, usuario, destino) VALUES ($1, $2, $3, $4, $5, $6)',
+    [cod, nome, qtd, tipo_mov, usuario, destino || 'ESTOQUE']
+  );
+  res.sendStatus(200);
+});
+
+app.get('/historico', async (req, res) => {
+  const { inicio, fim } = req.query;
+  let query = 'SELECT * FROM historico';
+  let params = [];
+
+  if (inicio && fim) {
+    query += ' WHERE data::date BETWEEN $1 AND $2';
+    params = [inicio, fim];
+  }
+  
+  query += ' ORDER BY data DESC';
+  const result = await pool.query(query, params);
+  res.json(result.rows);
+});
+
+// --- ROTAS DE AUTENTICAÇÃO ---
+app.post('/auth/login', async (req, res) => {
+  const { u, p } = req.body;
+  const result = await pool.query('SELECT * FROM usuarios WHERE u = $1 AND p = $2', [u, p]);
+  if (result.rows.length > 0) res.json(result.rows[0]);
+  else res.status(401).send('Erro');
+});
+
+app.post('/auth/register', async (req, res) => {
+  const { u, p } = req.body;
+  await pool.query('INSERT INTO usuarios (u, p, isadmin) VALUES ($1, $2, false)', [u, p]);
+  res.sendStatus(200);
+});
+
+app.get('/auth/users', async (req, res) => {
+  const result = await pool.query('SELECT u, isadmin FROM usuarios');
+  res.json(result.rows);
+});
+
+app.delete('/auth/users/:nome', async (req, res) => {
+  await pool.query('DELETE FROM usuarios WHERE u = $1', [req.params.nome]);
+  res.sendStatus(200);
+});
+
+app.listen(process.env.PORT || 3000, () => console.log("Servidor Rodando!"));
