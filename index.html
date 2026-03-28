@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Sistema de Expedição v15</title>
+    <title>Sistema de Expedição v15 - Histórico</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <style>
@@ -14,12 +14,13 @@
         button { padding: 10px 15px; border-radius: 4px; border: none; cursor: pointer; font-weight: 600; color: white; background: var(--accent); transition: 0.2s; }
         .user-header { display: flex; justify-content: space-between; align-items: center; background: var(--primary); color: white; padding: 15px 25px; border-radius: 8px; margin-bottom: 20px; }
         .layout { display: grid; grid-template-columns: 1fr 380px; gap: 20px; }
-        .tab-btn { background: #475569; margin-right: 5px; }
-        .tab-active { background: var(--accent) !important; }
+        .tab-btn { background: #475569; margin-right: 5px; opacity: 0.7; }
+        .tab-active { background: var(--accent) !important; opacity: 1; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
         .mov-entrada { color: var(--success); font-weight: bold; }
         .mov-saida { color: var(--danger); font-weight: bold; }
+        @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -42,7 +43,6 @@
         <div style="display:flex; gap:10px">
             <button onclick="showTab('estoque')" class="tab-btn tab-active" id="btn-tab-estoque">📦 Estoque</button>
             <button onclick="showTab('historico')" class="tab-btn hidden" id="btn-tab-hist">🕒 Histórico</button>
-            <button id="btn-admin" onclick="abrirAdmin()" class="hidden" style="background:#64748b">⚙️ Admin</button>
             <button onclick="location.reload()" style="background:var(--danger)">Sair</button>
         </div>
     </header>
@@ -58,37 +58,39 @@
                         <input type="number" id="p-qtd" value="1">
                         <select id="p-tipo"><option value="un">UN</option><option value="pct">PCT</option></select>
                     </div>
-                    <button onclick="salvarMov('ENTRADA')" style="margin-top:10px; background:var(--success)">➕ Lançar Entrada</button>
-                    <button onclick="addPedido()" style="margin-top:10px; background:var(--accent)">📝 Add ao Pedido</button>
+                    <div style="margin-top:15px; display:flex; gap:10px;">
+                        <button onclick="salvarMov('ENTRADA')" style="flex:1; background:var(--success)">➕ Lançar Entrada</button>
+                        <button onclick="addPedido()" style="flex:1; background:var(--accent)">📝 Add ao Pedido</button>
+                    </div>
                 </div>
                 <div class="card">
                     <h3>📊 Inventário</h3>
-                    <input type="text" id="busca" placeholder="Buscar..." onkeyup="render()">
-                    <table id="tabela-estoque">
-                        <thead><tr><th>Cód</th><th>Item</th><th>Qtd</th><th>Tipo</th><th class="col-admin hidden">Ações</th></tr></thead>
+                    <input type="text" id="busca" placeholder="Buscar produto..." onkeyup="render()">
+                    <table>
+                        <thead><tr><th>Cód</th><th>Item</th><th>Qtd</th><th>Tipo</th></tr></thead>
                         <tbody id="corpo-estoque"></tbody>
                     </table>
                 </div>
             </div>
             <div id="bloco-pedido" class="card hidden">
-                <h3>📋 Pedido Atual</h3>
-                <div id="lista-pedido"></div>
-                <input type="text" id="destino-pedido" placeholder="Destino" style="margin-top:10px">
-                <button onclick="finalizarPedido()" style="width:100%; background:var(--danger); margin-top:10px;">Finalizar Saída</button>
+                <h3>📋 Saída de Pedido</h3>
+                <div id="lista-pedido" style="min-height: 50px; border: 1px dashed #ccc; padding: 10px; border-radius: 4px;"></div>
+                <input type="text" id="destino-pedido" placeholder="Destino / Cliente" style="margin-top:10px">
+                <button onclick="finalizarPedido()" style="width:100%; background:var(--danger); margin-top:10px;">Finalizar e Gerar PDF</button>
             </div>
         </div>
     </div>
 
     <div id="tab-historico" class="hidden">
         <div class="card">
-            <h3>🕒 Histórico de Movimentações</h3>
-            <div style="display:flex; gap:10px; margin-bottom:20px;">
+            <h3>🕒 Histórico Global</h3>
+            <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap: wrap;">
                 <div>Início: <input type="date" id="hist-inicio"></div>
                 <div>Fim: <input type="date" id="hist-fim"></div>
-                <button onclick="carregarHistorico()" style="align-self: flex-end;">Filtrar</button>
+                <button onclick="carregarHistorico()" style="margin-top:25px">Filtrar</button>
             </div>
-            <table>
-                <thead><tr><th>Data</th><th>Tipo</th><th>Cód</th><th>Produto</th><th>Qtd</th><th>Usuário</th></tr></thead>
+            <table style="font-size: 14px;">
+                <thead><tr style="background:#f8fafc"><th>Data/Hora</th><th>Tipo</th><th>Cód</th><th>Item</th><th>Qtd</th><th>Destino</th><th>Usuário</th></tr></thead>
                 <tbody id="corpo-historico"></tbody>
             </table>
         </div>
@@ -100,26 +102,30 @@
     let estoque = [], pedidoAtual = [], usuarioLogado = null;
 
     async function autenticar(modo) {
-        const u = document.getElementById('auth-user').value;
+        const u = document.getElementById('auth-user').value.trim();
         const p = document.getElementById('auth-pass').value;
-        const res = await fetch(`${API_URL}/auth/${modo}`, {
-            method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ u, p })
-        });
-        if(res.ok) {
-            usuarioLogado = await res.json();
-            document.getElementById('auth-screen').classList.add('hidden');
-            document.getElementById('app').classList.remove('hidden');
-            document.getElementById('display-username').innerText = usuarioLogado.u;
-            if(usuarioLogado.isadmin) {
-                document.getElementById('btn-tab-hist').classList.remove('hidden');
-                document.getElementById('btn-admin').classList.remove('hidden');
-                document.getElementById('bloco-admin-mov').classList.remove('hidden');
-                document.getElementById('bloco-pedido').classList.remove('hidden');
-                document.querySelectorAll('.col-admin').forEach(e => e.classList.remove('hidden'));
-            }
-            carregarEstoque();
-        } else alert("Erro!");
+        try {
+            const res = await fetch(`${API_URL}/auth/${modo}`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ u, p })
+            });
+            if(res.ok) {
+                usuarioLogado = await res.json();
+                entrar();
+            } else alert("Usuário/Senha incorretos.");
+        } catch(e) { alert("Servidor offline."); }
+    }
+
+    function entrar() {
+        document.getElementById('auth-screen').classList.add('hidden');
+        document.getElementById('app').classList.remove('hidden');
+        document.getElementById('display-username').innerText = usuarioLogado.u;
+        if(usuarioLogado.isadmin) {
+            document.getElementById('btn-tab-hist').classList.remove('hidden');
+            document.getElementById('bloco-admin-mov').classList.remove('hidden');
+            document.getElementById('bloco-pedido').classList.remove('hidden');
+        }
+        carregarEstoque();
     }
 
     function showTab(tab) {
@@ -136,30 +142,83 @@
         render();
     }
 
-    async function salvarMov(tipo, itemPedido = null) {
-        const item = itemPedido || {
-            cod: document.getElementById('p-cod').value,
-            nome: document.getElementById('p-nome').value,
+    function render() {
+        const busca = document.getElementById('busca').value.toLowerCase();
+        const corpo = document.getElementById('corpo-estoque');
+        corpo.innerHTML = estoque.filter(p => p.nome.toLowerCase().includes(busca) || p.cod.includes(busca)).map(p => `
+            <tr><td>${p.cod}</td><td>${p.nome}</td><td>${p.qtd}</td><td>${p.tipo}</td></tr>
+        `).join('');
+    }
+
+    function preencherCampos(cod) {
+        const p = estoque.find(x => x.cod === cod.trim());
+        if(p) { document.getElementById('p-nome').value = p.nome; document.getElementById('p-tipo').value = p.tipo; }
+    }
+
+    async function salvarMov(tipo, dadosManual = null) {
+        const item = dadosManual || {
+            cod: document.getElementById('p-cod').value.trim(),
+            nome: document.getElementById('p-nome').value.trim(),
             qtd: parseInt(document.getElementById('p-qtd').value),
             tipo: document.getElementById('p-tipo').value,
             min: 5
         };
 
-        // Salva no estoque
+        const ex = estoque.find(x => x.cod === item.cod);
+        let novaQtd = item.qtd;
+        if(tipo === 'ENTRADA' && ex) novaQtd += parseInt(ex.qtd);
+        if(tipo === 'SAÍDA' && ex) novaQtd = parseInt(ex.qtd) - item.qtd;
+
+        // Atualiza Estoque
         await fetch(`${API_URL}/estoque`, {
             method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(item)
+            body: JSON.stringify({...item, qtd: novaQtd})
         });
 
-        // Salva no histórico (Precisamos criar essa rota no server.js depois)
+        // Grava Histórico
         await fetch(`${API_URL}/historico`, {
             method: 'POST', headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
                 cod: item.cod, nome: item.nome, qtd: item.qtd, 
-                tipo_mov: tipo, usuario: usuarioLogado.u
+                tipo_mov: tipo, usuario: usuarioLogado.u, destino: document.getElementById('destino-pedido').value || 'ALMOXARIFADO'
             })
         });
         carregarEstoque();
+    }
+
+    function addPedido() {
+        const cod = document.getElementById('p-cod').value.trim();
+        const p = estoque.find(x => x.cod === cod);
+        const qtd = parseInt(document.getElementById('p-qtd').value);
+        if(!p || p.qtd < qtd) return alert("Sem estoque suficiente!");
+        pedidoAtual.push({ cod, nome: p.nome, qtd, tipo: p.tipo });
+        renderPedido();
+    }
+
+    function renderPedido() {
+        const div = document.getElementById('lista-pedido');
+        document.getElementById('footer-pedido').classList.toggle('hidden', pedidoAtual.length === 0);
+        div.innerHTML = pedidoAtual.map((it, i) => `
+            <div style="font-size:13px; margin-bottom:5px;"><b>${it.qtd}x</b> ${it.nome} <button onclick="pedidoAtual.splice(${i},1); renderPedido();" style="background:none; color:red; float:right; padding:0">x</button></div>
+        `).join('');
+    }
+
+    async function finalizarPedido() {
+        const dest = document.getElementById('destino-pedido').value;
+        if(!dest || pedidoAtual.length === 0) return alert("Preencha o destino e adicione itens.");
+        
+        for(let it of pedidoAtual) {
+            await salvarMov('SAÍDA', it);
+        }
+
+        const doc = new jspdf.jsPDF();
+        doc.text(`SAÍDA DE ESTOQUE - DESTINO: ${dest.toUpperCase()}`, 10, 10);
+        doc.text(`Data: ${new Date().toLocaleString()}`, 10, 20);
+        doc.autoTable({ head: [['Cód', 'Item', 'Qtd']], body: pedidoAtual.map(x => [x.cod, x.nome, x.qtd]), startY: 30 });
+        doc.save(`saida_${dest}.pdf`);
+
+        pedidoAtual = []; renderPedido(); document.getElementById('destino-pedido').value = '';
+        alert("Pedido finalizado e registrado no histórico!");
     }
 
     async function carregarHistorico() {
@@ -171,12 +230,10 @@
             <tr>
                 <td>${new Date(h.data).toLocaleString()}</td>
                 <td class="${h.tipo_mov === 'ENTRADA' ? 'mov-entrada' : 'mov-saida'}">${h.tipo_mov}</td>
-                <td>${h.cod}</td><td>${h.nome}</td><td>${h.qtd}</td><td>${h.usuario}</td>
+                <td>${h.cod}</td><td>${h.nome}</td><td>${h.qtd}</td><td>${h.destino}</td><td>${h.usuario}</td>
             </tr>
         `).join('');
     }
-
-    // ... (Manter funções de render, preencherCampos, addPedido e finalizarPedido do código anterior)
 </script>
 </body>
 </html>
