@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Expedição v30</title>
+    <title>Sistema de Expedição v31</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -208,30 +208,37 @@
             carregar();
         }
 
-        // FUNÇÃO PARA LIMPAR TUDO
         async function limparEstoqueTodo() {
-            if(confirm("ATENÇÃO: Isso apagará TODOS os produtos do estoque permanentemente. Deseja continuar?")) {
-                if(confirm("TEM CERTEZA ABSOLUTA? Esta ação não pode ser desfeita.")) {
+            if(confirm("Deseja apagar TODO o estoque?")) {
+                if(confirm("Certeza absoluta?")) {
                     for(let p of estoque) {
                         await fetch(`${API}/estoque/${p.cod}`, {method:'DELETE'});
                     }
-                    alert("Estoque limpo com sucesso!");
+                    alert("Estoque limpo!");
                     carregar();
                 }
             }
         }
 
+        // IMPORTAÇÃO SEM CABEÇALHO (LÊ DIRETO OS DADOS)
         function importarMassa(input) {
             const r = new FileReader();
             r.onload = async (e) => {
                 const wb = XLSX.read(new Uint8Array(e.target.result), {type: 'array'});
-                const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+                // O parâmetro 'header: 1' transforma em array simples, 'range: 1' pula a primeira linha
+                const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: ["cod", "nome", "qtd", "min"], range: 1});
+                
                 for(let f of rows) {
                     if(f.cod && f.nome) {
-                        await lancar('ENTRADA', { cod: f.cod.toString(), nome: f.nome, qtd: parseInt(f.qtd) || 0, min: parseInt(f.min) || 5 });
+                        await lancar('ENTRADA', { 
+                            cod: f.cod.toString(), 
+                            nome: f.nome, 
+                            qtd: parseInt(f.qtd) || 0, 
+                            min: parseInt(f.min) || 5 
+                        });
                     }
                 }
-                alert("Importado!");
+                alert("Importado com sucesso!");
                 carregar();
             };
             r.readAsArrayBuffer(input.files[0]);
