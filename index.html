@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Expedição v40</title>
+    <title>Sistema de Expedição v41</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <style>
@@ -17,15 +16,17 @@
         
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
         
-        /* Cabeçalho de Lançamento (Horizontal) */
+        /* Painel de Lançamento (Horizontal com Labels) */
         .painel-horizontal { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; align-items: flex-end; }
         .campo-box { display: flex; flex-direction: column; gap: 5px; }
-        .campo-box label { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; }
-        
+        .campo-box label { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; border-bottom: 2px solid transparent; width: fit-content; }
+        /* Destaque para as labels conforme solicitado no desenho */
+        .label-destaque { border-bottom-color: #ff4444 !important; } 
+
         input { padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; }
         button { padding: 10px 18px; border-radius: 6px; border: none; cursor: pointer; font-weight: 700; color: white; background: var(--accent); }
 
-        /* --- O QUE FOI CORRIGIDO: CADA PRODUTO EM UM CARTÃO INDIVIDUAL --- */
+        /* --- LAYOUT DE CARTÕES (UM EMBAIXO DO OUTRO) --- */
         #corpo-estoque-lista { display: flex; flex-direction: column; gap: 15px; }
         .item-produto { 
             background: white; 
@@ -35,13 +36,14 @@
             display: flex;
             flex-direction: column; 
             gap: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            transition: transform 0.2s;
         }
+        .item-produto:hover { transform: scale(1.01); }
         .item-produto.alerta { border-left: 6px solid var(--danger); }
-        .valor-nome { font-size: 20px; font-weight: 800; color: var(--primary); border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 5px; }
+        .valor-nome { font-size: 20px; font-weight: 800; color: var(--primary); margin-bottom: 5px; }
         .dado-linha { font-size: 15px; color: #334155; display: flex; }
-        .dado-linha b { min-width: 100px; color: #64748b; font-size: 12px; text-transform: uppercase; }
-        .valor-qtd { font-weight: 800; color: var(--success); font-size: 16px; }
+        .dado-linha b { min-width: 100px; color: #64748b; font-size: 11px; text-transform: uppercase; }
+        .valor-qtd { font-weight: 800; color: var(--success); }
 
         .nav { display: flex; justify-content: space-between; align-items: center; background: var(--primary); color: white; padding: 15px 20px; border-radius: 12px; margin-bottom: 20px; }
     </style>
@@ -64,9 +66,9 @@
         <div class="nav">
             <div>📦 <b>Expedição</b> | <span id="nome-exibir"></span></div>
             <div style="display:flex; gap:8px">
-                <button onclick="aba('estoque')" style="font-size:12px">Estoque</button>
-                <button id="btn-hist-nav" class="hidden" onclick="aba('hist')" style="font-size:12px">Histórico</button>
-                <button onclick="location.reload()" style="background:var(--danger); font-size:12px">Sair</button>
+                <button onclick="aba('estoque')">Estoque</button>
+                <button id="btn-hist-nav" class="hidden" onclick="aba('hist')">Histórico</button>
+                <button onclick="location.reload()" style="background:var(--danger)">Sair</button>
             </div>
         </div>
 
@@ -74,10 +76,10 @@
             <div id="area-admin" class="hidden">
                 <h4 style="margin-top:0">⚙️ Lançamento</h4>
                 <div class="painel-horizontal">
-                    <div class="campo-box"><label>Código</label><input type="text" id="p-cod" oninput="buscaAuto(this.value)"></div>
-                    <div class="campo-box"><label>Nome</label><input type="text" id="p-nome" style="width:250px"></div>
-                    <div class="campo-box"><label>Qtd</label><input type="number" id="p-qtd" value="1"></div>
-                    <div class="campo-box"><label>Mín</label><input type="number" id="p-min" value="5"></div>
+                    <div class="campo-box"><label class="label-destaque">Código</label><input type="text" id="p-cod" oninput="buscaAuto(this.value)"></div>
+                    <div class="campo-box"><label class="label-destaque">Nome</label><input type="text" id="p-nome" style="width:250px"></div>
+                    <div class="campo-box"><label class="label-destaque">Qtd</label><input type="number" id="p-qtd" value="1"></div>
+                    <div class="campo-box"><label class="label-destaque">Mín</label><input type="number" id="p-min" value="5"></div>
                 </div>
                 <div style="display:flex; gap:10px; flex-wrap: wrap; margin-bottom: 25px;">
                     <button onclick="lancar('ENTRADA')" style="background:var(--success)">+ Entrada</button>
@@ -90,7 +92,7 @@
                 </div>
             </div>
 
-            <h3>📊 Inventário Geral (Produtos)</h3>
+            <h3>📊 Inventário Geral</h3>
             <input type="text" placeholder="Pesquisar..." onkeyup="filtrarLista(this.value)" style="width:100%; margin-bottom:20px">
             
             <div id="corpo-estoque-lista"></div>
@@ -98,10 +100,7 @@
 
         <div id="aba-hist" class="card hidden">
             <h3>🕒 Histórico</h3>
-            <table style="width:100%; text-align:left">
-                <thead><tr><th>Data</th><th>Tipo</th><th>Item</th><th>Qtd</th></tr></thead>
-                <tbody id="corpo-hist"></tbody>
-            </table>
+            <div id="cont-hist"></div>
         </div>
     </div>
 
@@ -127,7 +126,7 @@
                 document.getElementById('nome-exibir').innerText = userAtivo.u;
                 if(userAtivo.isadmin) { document.getElementById('area-admin').classList.remove('hidden'); document.getElementById('btn-hist-nav').classList.remove('hidden'); }
                 carregar();
-            } else alert("Acesso negado.");
+            } else alert("Erro!");
         }
 
         async function carregar() {
@@ -138,35 +137,28 @@
 
         function renderLista() {
             const container = document.getElementById('corpo-estoque-lista');
-            // Geração de cartões independentes para cada produto
+            // Garante que cada objeto do banco vire um cartão individual
             container.innerHTML = estoque.map(p => `
                 <div class="item-produto ${p.qtd <= p.min ? 'alerta' : ''}" data-busca="${p.cod} ${p.nome}">
                     <div class="valor-nome">${p.nome}</div>
-                    <div class="dado-linha"><b>Código:</b> ${p.cod}</div>
-                    <div class="dado-linha"><b>Qtd Atual:</b> <span class="valor-qtd">${p.qtd}</span></div>
-                    <div class="dado-linha"><b>Mínimo:</b> ${p.min}</div>
-                    ${userAtivo.isadmin ? `<button onclick="apagar('${p.cod}')" style="background:var(--danger); font-size:10px; width:fit-content; margin-top:10px">Remover Item</button>` : ''}
+                    <div class="dado-linha"><b>CÓDIGO:</b> ${p.cod}</div>
+                    <div class="dado-linha"><b>QTD ATUAL:</b> <span class="valor-qtd">${p.qtd}</span></div>
+                    <div class="dado-linha"><b>MÍNIMO:</b> ${p.min}</div>
+                    ${userAtivo.isadmin ? `<button onclick="apagar('${p.cod}')" style="background:var(--danger); font-size:10px; width:fit-content; margin-top:5px">Remover Item</button>` : ''}
                 </div>
             `).join('');
         }
 
-        async function lancar(tipo, manual) {
-            const item = manual || {
-                cod: document.getElementById('p-cod').value.trim(),
-                nome: document.getElementById('p-nome').value.trim(),
-                qtd: parseInt(document.getElementById('p-qtd').value),
-                min: parseInt(document.getElementById('p-min').value) || 5
-            };
-            if(!item.cod || !item.nome) return;
-
+        // Função ajustada para NÃO somar se for um novo código vindo do Excel
+        async function salvarProduto(item, tipo) {
             const ex = estoque.find(x => x.cod == item.cod);
             let finalQtd = item.qtd;
+            
+            // Se já existe e é entrada manual, soma. Se é importação limpa, mantém o valor do excel.
             if(tipo === 'ENTRADA' && ex) finalQtd += ex.qtd;
 
-            // Retorna a promessa do fetch para que a importação possa esperar
-            return fetch(`${API}/estoque`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({...item, qtd: finalQtd}) })
-                .then(() => fetch(`${API}/historico`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod: item.cod, nome: item.nome, qtd: item.qtd, tipo_mov: tipo, usuario: userAtivo.u}) }))
-                .then(() => carregar());
+            await fetch(`${API}/estoque`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({...item, qtd: finalQtd}) });
+            await fetch(`${API}/historico`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod: item.cod, nome: item.nome, qtd: item.qtd, tipo_mov: tipo, usuario: userAtivo.u}) });
         }
 
         async function importarMassa(input) {
@@ -175,36 +167,49 @@
                 const wb = XLSX.read(new Uint8Array(e.target.result), {type: 'array'});
                 const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: ["cod", "nome", "qtd", "min"], range: 1});
                 
-                alert("Importando em ordem... Aguarde.");
+                alert("Importando itens... Cada linha será um cartão individual.");
                 for(const f of rows) {
                     if(f.cod && f.nome) {
-                        // O 'await' aqui é crucial: ele trava o loop até o servidor terminar de salvar este produto
-                        await lancar('ENTRADA', { cod: f.cod.toString(), nome: f.nome, qtd: parseInt(f.qtd) || 0, min: parseInt(f.min) || 5 });
+                        // O await garante que um por um seja criado no banco
+                        await salvarProduto({
+                            cod: f.cod.toString(),
+                            nome: f.nome,
+                            qtd: parseInt(f.qtd) || 0,
+                            min: parseInt(f.min) || 5
+                        }, 'ENTRADA');
                     }
                 }
-                alert("Importação concluída! Os produtos agora estão em cartões separados.");
+                alert("Concluído!");
+                carregar();
             };
             r.readAsArrayBuffer(input.files[0]);
+        }
+
+        async function lancar(tipo) {
+            const item = {
+                cod: document.getElementById('p-cod').value.trim(),
+                nome: document.getElementById('p-nome').value.trim(),
+                qtd: parseInt(document.getElementById('p-qtd').value),
+                min: parseInt(document.getElementById('p-min').value) || 5
+            };
+            if(!item.cod || !item.nome) return;
+            await salvarProduto(item, tipo);
+            carregar();
         }
 
         function aba(t) {
             document.getElementById('aba-estoque').classList.toggle('hidden', t !== 'estoque');
             document.getElementById('aba-hist').classList.toggle('hidden', t !== 'hist');
-            if(t === 'hist') carregarHist();
         }
 
-        async function carregarHist() {
-            const res = await fetch(`${API}/historico`);
-            const h = await res.json();
-            document.getElementById('corpo-hist').innerHTML = h.map(x => `<tr><td>${new Date(x.data).toLocaleDateString()}</td><td>${x.tipo_mov}</td><td>${x.nome}</td><td>${x.qtd}</td></tr>`).join('');
-        }
-
-        async function apagar(c) { if(confirm("Excluir?")) { await fetch(`${API}/estoque/${c}`, {method:'DELETE'}); carregar(); } }
-        async function limparEstoqueTodo() { if(confirm("Apagar TUDO?")) { for(let p of estoque) await fetch(`${API}/estoque/${p.cod}`, {method:'DELETE'}); carregar(); } }
+        async function apagar(c) { if(confirm("Remover?")) { await fetch(`${API}/estoque/${c}`, {method:'DELETE'}); carregar(); } }
+        async function limparEstoqueTodo() { if(confirm("Zerar tudo?")) { for(let p of estoque) await fetch(`${API}/estoque/${p.cod}`, {method:'DELETE'}); carregar(); } }
         function buscaAuto(c) { const p = estoque.find(x => x.cod == c.trim()); if(p) { document.getElementById('p-nome').value = p.nome; document.getElementById('p-min').value = p.min; } }
         function filtrarLista(v) {
             const termo = v.toLowerCase();
-            document.querySelectorAll('.item-produto').forEach(el => el.style.display = el.getAttribute('data-busca').toLowerCase().includes(termo) ? "flex" : "none");
+            document.querySelectorAll('.item-produto').forEach(el => {
+                el.style.display = el.getAttribute('data-busca').toLowerCase().includes(termo) ? "flex" : "none";
+            });
         }
     </script>
 </body>
