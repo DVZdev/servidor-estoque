@@ -2,46 +2,43 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Estoque Profissional</title>
+    <title>Sistema de Expedição v21 - FULL ADMIN</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root { --primary: #1e293b; --accent: #2563eb; --bg: #f1f5f9; --success: #059669; --danger: #be123c; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
         .hidden { display: none !important; }
         .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        input, select { padding: 12px; border: 1px solid #cbd5e1; border-radius: 4px; margin: 8px 0; width: 100%; box-sizing: border-box; }
-        button { padding: 12px 18px; border-radius: 4px; border: none; cursor: pointer; font-weight: 600; color: white; background: var(--accent); }
+        input { padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; margin: 5px 0; width: 100%; box-sizing: border-box; }
+        button { padding: 10px 15px; border-radius: 4px; border: none; cursor: pointer; font-weight: 600; color: white; background: var(--accent); }
         .user-header { display: flex; justify-content: space-between; align-items: center; background: var(--primary); color: white; padding: 15px 25px; border-radius: 8px; margin-bottom: 20px; }
         .layout { display: grid; grid-template-columns: 1fr 380px; gap: 20px; }
-        .tab-btn { background: #475569; margin-right: 5px; }
-        .tab-active { background: var(--accent) !important; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
+        .tab-active { background: var(--accent) !important; border-bottom: 4px solid white; }
+        table { width: 100%; border-collapse: collapse; background: white; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
-        @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+        .btn-delete { background: var(--danger); padding: 5px 10px; font-size: 12px; }
     </style>
 </head>
 <body>
 
 <div id="auth-screen">
-    <div class="card" style="max-width: 400px; margin: 80px auto; border-top: 5px solid var(--accent);">
-        <h2 style="text-align:center">Acesso ao Sistema</h2>
+    <div class="card" style="max-width: 400px; margin: 80px auto;">
+        <h2 style="text-align:center">Login do Sistema</h2>
         <input type="text" id="auth-user" placeholder="Usuário">
         <input type="password" id="auth-pass" placeholder="Senha">
-        <div style="display:flex; gap:10px; margin-top:10px;">
-            <button onclick="autenticar('login')" style="flex:1">Entrar</button>
-            <button onclick="autenticar('register')" style="flex:1; background:var(--success)">Registrar</button>
-        </div>
+        <button onclick="autenticar('login')" style="width:100%; margin-top:10px">Entrar</button>
+        <button onclick="autenticar('register')" style="width:100%; margin-top:5px; background:var(--success)">Registrar Novo</button>
     </div>
 </div>
 
 <div id="app" class="hidden">
     <header class="user-header">
-        <div>👤 <strong id="display-username">---</strong></div>
+        <div>👤 <strong id="display-username"></strong></div>
         <div style="display:flex; gap:10px">
-            <button onclick="showTab('estoque')" class="tab-btn tab-active" id="btn-tab-estoque">📦 Estoque</button>
-            <button onclick="showTab('historico')" class="tab-btn hidden" id="btn-tab-hist">🕒 Histórico</button>
+            <button onclick="showTab('estoque')" id="btn-estoque">📦 Estoque</button>
+            <button onclick="showTab('historico')" id="btn-hist" class="hidden">🕒 Histórico / Excel</button>
             <button onclick="location.reload()" style="background:var(--danger)">Sair</button>
         </div>
     </header>
@@ -49,42 +46,45 @@
     <div id="tab-estoque">
         <div class="layout">
             <div>
-                <div id="bloco-admin-mov" class="card hidden">
-                    <h3>📦 Movimentação</h3>
+                <div id="bloco-admin" class="card hidden">
+                    <h3>📦 Movimentação (Admin)</h3>
                     <div style="display: grid; grid-template-columns: 1fr 1fr 80px; gap: 10px;">
-                        <input type="text" id="p-cod" placeholder="Cód" oninput="preencherCampos(this.value)">
+                        <input type="text" id="p-cod" placeholder="Código" oninput="preencher(this.value)">
                         <input type="text" id="p-nome" placeholder="Produto">
                         <input type="number" id="p-qtd" value="1">
                     </div>
-                    <div style="margin-top:15px; display:flex; gap:10px;">
-                        <button onclick="salvarMov('ENTRADA')" style="flex:1; background:var(--success)">➕ Entrada</button>
-                        <button onclick="addPedido()" style="flex:1; background:var(--accent)">📝 Add Pedido</button>
+                    <div style="margin-top:10px; display:flex; gap:10px;">
+                        <button onclick="salvar('ENTRADA')" style="flex:1; background:var(--success)">➕ Entrada</button>
+                        <button onclick="addPedido()" style="flex:1">📝 Add ao Pedido</button>
                     </div>
                 </div>
                 <div class="card">
                     <h3>📊 Inventário</h3>
-                    <input type="text" id="busca" placeholder="Buscar..." onkeyup="render()">
-                    <table>
-                        <thead><tr><th>Cód</th><th>Item</th><th>Qtd</th></tr></thead>
+                    <input type="text" placeholder="Buscar..." onkeyup="render()">
+                    <table id="tabela-estoque">
+                        <thead><tr><th>Cód</th><th>Item</th><th>Qtd</th><th class="col-admin hidden">Ação</th></tr></thead>
                         <tbody id="corpo-estoque"></tbody>
                     </table>
                 </div>
             </div>
             <div id="bloco-pedido" class="card hidden">
-                <h3>📋 Pedido Atual</h3>
-                <div id="lista-pedido" style="min-height: 50px; border: 1px dashed #ccc; padding: 10px; margin-bottom: 10px;"></div>
-                <input type="text" id="destino-pedido" placeholder="Destino / Cliente">
-                <button onclick="finalizarPedido()" style="width:100%; background:var(--danger); margin-top:10px;">Finalizar e PDF</button>
+                <h3>📋 Saída de Material</h3>
+                <div id="lista-pedido" style="border:1px dashed #ccc; padding:10px; margin-bottom:10px"></div>
+                <input type="text" id="destino" placeholder="Destino">
+                <button onclick="finalizar()" style="width:100%; background:var(--danger); margin-top:10px">Finalizar e PDF</button>
             </div>
         </div>
     </div>
 
     <div id="tab-historico" class="hidden">
         <div class="card">
-            <h3>🕒 Histórico de Movimentações</h3>
-            <table style="font-size: 14px;">
+            <div style="display:flex; justify-content:space-between">
+                <h3>🕒 Histórico Global</h3>
+                <button onclick="exportarExcel()" style="background:#157347">📗 Exportar Excel</button>
+            </div>
+            <table>
                 <thead><tr><th>Data</th><th>Tipo</th><th>Item</th><th>Qtd</th><th>Usuário</th></tr></thead>
-                <tbody id="corpo-historico"></tbody>
+                <tbody id="corpo-hist"></tbody>
             </table>
         </div>
     </div>
@@ -92,118 +92,95 @@
 
 <script>
     const API_URL = 'https://servidor-estoque-8g56.onrender.com';
-    let estoque = [], pedidoAtual = [], usuarioLogado = null;
+    let estoque = [], pedido = [], user = null;
 
-    async function autenticar(modo) {
-        const u = document.getElementById('auth-user').value.trim();
+    async function autenticar(m) {
+        const u = document.getElementById('auth-user').value;
         const p = document.getElementById('auth-pass').value;
-        if (!u || !p) return alert("Preencha os campos!");
-
-        try {
-            const res = await fetch(`${API_URL}/auth/${modo}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ u, p })
-            });
-
-            if (res.ok) {
-                if (modo === 'register') {
-                    alert("Registrado! Agora faça login.");
-                } else {
-                    usuarioLogado = await res.json();
-                    document.getElementById('auth-screen').classList.add('hidden');
-                    document.getElementById('app').classList.remove('hidden');
-                    document.getElementById('display-username').innerText = usuarioLogado.u;
-                    
-                    if (usuarioLogado.isadmin) {
-                        document.getElementById('btn-tab-hist').classList.remove('hidden');
-                        document.getElementById('bloco-admin-mov').classList.remove('hidden');
-                        document.getElementById('bloco-pedido').classList.remove('hidden');
-                    }
-                    carregarEstoque();
-                }
-            } else {
-                alert("Falha na autenticação.");
+        const res = await fetch(`${API_URL}/auth/${m}`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({u,p}) });
+        if(res.ok) {
+            if(m==='register') return alert("OK!");
+            user = await res.json();
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+            document.getElementById('display-username').innerText = user.u;
+            if(user.isadmin) {
+                document.getElementById('btn-hist').classList.remove('hidden');
+                document.getElementById('bloco-admin').classList.remove('hidden');
+                document.getElementById('bloco-pedido').classList.remove('hidden');
             }
-        } catch (e) {
-            alert("Servidor indisponível no momento.");
-        }
+            carregar();
+        } else alert("Erro!");
     }
 
-    async function carregarEstoque() {
-        try {
-            const res = await fetch(`${API_URL}/estoque`);
-            estoque = await res.json();
-            render();
-        } catch (e) { console.error(e); }
+    async function carregar() {
+        const res = await fetch(`${API_URL}/estoque`);
+        estoque = await res.json();
+        render();
     }
 
     function render() {
-        const busca = document.getElementById('busca').value.toLowerCase();
-        const corpo = document.getElementById('corpo-estoque');
-        corpo.innerHTML = estoque.filter(p => p.nome.toLowerCase().includes(busca) || p.cod.includes(busca)).map(p => `
-            <tr><td>${p.cod}</td><td>${p.nome}</td><td>${p.qtd}</td></tr>
+        document.getElementById('corpo-estoque').innerHTML = estoque.map(p => `
+            <tr><td>${p.cod}</td><td>${p.nome}</td><td>${p.qtd}</td>
+            <td class="${user.isadmin ? '' : 'hidden'}"><button class="btn-delete" onclick="removerReal('${p.cod}')">Excluir</button></td></tr>
         `).join('');
     }
 
-    function showTab(tab) {
-        document.getElementById('tab-estoque').classList.toggle('hidden', tab !== 'estoque');
-        document.getElementById('tab-historico').classList.toggle('hidden', tab !== 'historico');
-        document.getElementById('btn-tab-estoque').classList.toggle('tab-active', tab === 'estoque');
-        document.getElementById('btn-tab-hist').classList.toggle('tab-active', tab === 'historico');
-        if (tab === 'historico') carregarHistorico();
+    async function removerReal(cod) {
+        if(confirm("Deseja apagar esse produto do sistema?")) {
+            await fetch(`${API_URL}/estoque/${cod}`, { method: 'DELETE' });
+            carregar();
+        }
     }
 
-    async function carregarHistorico() {
-        try {
-            const res = await fetch(`${API_URL}/historico`);
-            const dados = await res.json();
-            document.getElementById('corpo-historico').innerHTML = dados.map(h => `
-                <tr><td>${new Date(h.data).toLocaleString()}</td><td>${h.tipo_mov}</td><td>${h.nome}</td><td>${h.qtd}</td><td>${h.usuario}</td></tr>
-            `).join('');
-        } catch (e) { console.error(e); }
+    function showTab(t) {
+        document.getElementById('tab-estoque').classList.toggle('hidden', t!=='estoque');
+        document.getElementById('tab-historico').classList.toggle('hidden', t!=='historico');
+        if(t==='historico') carregarHist();
     }
 
-    function preencherCampos(cod) {
-        const p = estoque.find(x => x.cod === cod.trim());
-        if (p) document.getElementById('p-nome').value = p.nome;
+    async function carregarHist() {
+        const res = await fetch(`${API_URL}/historico`);
+        const dados = await res.json();
+        document.getElementById('corpo-hist').innerHTML = dados.map(h => `
+            <tr><td>${new Date(h.data).toLocaleString()}</td><td>${h.tipo_mov}</td><td>${h.nome}</td><td>${h.qtd}</td><td>${h.usuario}</td></tr>
+        `).join('');
     }
 
-    async function salvarMov(tipo, manualItem = null) {
-        const item = manualItem || {
-            cod: document.getElementById('p-cod').value.trim(),
-            nome: document.getElementById('p-nome').value.trim(),
-            qtd: parseInt(document.getElementById('p-qtd').value),
-            tipo: 'un'
-        };
-        const ex = estoque.find(x => x.cod === item.cod);
-        let nQtd = item.qtd;
-        if (tipo === 'ENTRADA' && ex) nQtd += parseInt(ex.qtd);
-        if (tipo === 'SAÍDA' && ex) nQtd = parseInt(ex.qtd) - item.qtd;
+    function preencher(c) { const p = estoque.find(x=>x.cod===c.trim()); if(p) document.getElementById('p-nome').value=p.nome; }
 
-        await fetch(`${API_URL}/estoque`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...item, qtd: nQtd }) });
-        await fetch(`${API_URL}/historico`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cod: item.cod, nome: item.nome, qtd: item.qtd, tipo_mov: tipo, usuario: usuarioLogado.u, destino: document.getElementById('destino-pedido').value }) });
-        carregarEstoque();
+    async function salvar(tipo, itManual = null) {
+        const item = itManual || { cod: document.getElementById('p-cod').value, nome: document.getElementById('p-nome').value, qtd: parseInt(document.getElementById('p-qtd').value), tipo:'un' };
+        const ex = estoque.find(x=>x.cod===item.cod);
+        let nQ = item.qtd;
+        if(tipo==='ENTRADA' && ex) nQ += parseInt(ex.qtd);
+        if(tipo==='SAÍDA' && ex) nQ = parseInt(ex.qtd) - item.qtd;
+
+        await fetch(`${API_URL}/estoque`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({...item, qtd:nQ}) });
+        await fetch(`${API_URL}/historico`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({cod:item.cod, nome:item.nome, qtd:item.qtd, tipo_mov:tipo, usuario:user.u}) });
+        carregar();
     }
 
     function addPedido() {
-        const cod = document.getElementById('p-cod').value.trim();
-        const p = estoque.find(x => x.cod === cod);
+        const p = estoque.find(x=>x.cod===document.getElementById('p-cod').value);
         const q = parseInt(document.getElementById('p-qtd').value);
-        if (!p || p.qtd < q) return alert("Estoque insuficiente!");
-        pedidoAtual.push({ cod, nome: p.nome, qtd: q });
-        document.getElementById('lista-pedido').innerHTML = pedidoAtual.map(i => `<div>${i.qtd}x ${i.nome}</div>`).join('');
+        if(!p || p.qtd < q) return alert("Estoque Insuficiente!");
+        pedido.push({cod:p.cod, nome:p.nome, qtd:q});
+        document.getElementById('lista-pedido').innerHTML = pedido.map(i=>`<div>${i.qtd}x ${i.nome}</div>`).join('');
     }
 
-    async function finalizarPedido() {
-        const d = document.getElementById('destino-pedido').value;
-        if (!d || pedidoAtual.length === 0) return alert("Preencha o destino!");
-        for (let it of pedidoAtual) { await salvarMov('SAÍDA', it); }
-        const doc = new jspdf.jsPDF();
-        doc.text(`SAÍDA: ${d.toUpperCase()}`, 10, 10);
-        doc.autoTable({ head: [['Cód', 'Item', 'Qtd']], body: pedidoAtual.map(x => [x.cod, x.nome, x.qtd]) });
-        doc.save(`saida.pdf`);
-        pedidoAtual = []; document.getElementById('lista-pedido').innerHTML = ''; carregarEstoque();
+    async function finalizar() {
+        const d = document.getElementById('destino').value;
+        if(!d) return alert("Destino?");
+        for(let it of pedido) { await salvar('SAÍDA', it); }
+        alert("Finalizado!");
+        pedido=[]; document.getElementById('lista-pedido').innerHTML=''; carregar();
+    }
+
+    function exportarExcel() {
+        const tb = document.getElementById('tab-historico').querySelector('table');
+        const wb = XLSX.utils.table_to_book(tb);
+        XLSX.writeFile(wb, "historico_estoque.xlsx");
     }
 </script>
 </body>
