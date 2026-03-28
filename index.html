@@ -3,32 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Expedição v45</title>
+    <title>MyMedia - Sistema de Expedição</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <style>
-        :root { --primary: #1e293b; --accent: #2563eb; --bg: #f1f5f9; --success: #059669; --danger: #be123c; --warning: #d97706; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; }
+        /* CORES MYMEDIA: BRANCO E LARANJA */
+        :root { 
+            --primary: #ff6600; /* Laranja MyMedia */
+            --primary-dark: #e65c00;
+            --bg: #ffffff; 
+            --card-bg: #fdfdfd;
+            --text: #1e293b;
+            --success: #059669;
+            --danger: #be123c;
+            --border: #e2e8f0;
+        }
+
+        body { font-family: 'Inter', 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; }
         .hidden { display: none !important; }
+        
         #google_translate_element { margin-bottom: 15px; text-align: right; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .painel-horizontal { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; align-items: flex-end; }
-        .campo-box { display: flex; flex-direction: column; gap: 5px; }
-        .campo-box label { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; }
-        input { padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; width: 100%; box-sizing: border-box; }
-        button { padding: 10px 18px; border-radius: 6px; border: none; cursor: pointer; font-weight: 700; color: white; background: var(--accent); }
-        #carrinho-area { background: #fffbeb; border: 2px dashed var(--warning); padding: 15px; border-radius: 10px; margin-bottom: 20px; }
-        .item-carrinho { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #fde68a; font-weight: 600; }
+        
+        /* Estilo dos Cards */
+        .card { 
+            background: var(--card-bg); 
+            padding: 25px; 
+            border-radius: 16px; 
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+            margin-bottom: 25px; 
+        }
+
+        /* Inputs Modernos */
+        .campo-box label { font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; }
+        input { 
+            padding: 12px; 
+            border: 2px solid #f1f5f9; 
+            border-radius: 8px; 
+            font-size: 14px; 
+            background: #f8fafc;
+            transition: all 0.3s;
+        }
+        input:focus { border-color: var(--primary); outline: none; background: white; }
+
+        /* Botões Estilizados */
+        button { 
+            padding: 12px 20px; 
+            border-radius: 8px; 
+            border: none; 
+            cursor: pointer; 
+            font-weight: 700; 
+            color: white; 
+            background: var(--primary); 
+            box-shadow: 0 4px 6px -1px rgba(255, 102, 0, 0.2);
+            transition: transform 0.2s, background 0.2s;
+        }
+        button:hover { background: var(--primary-dark); transform: translateY(-1px); }
+        .btn-success { background: var(--success); box-shadow: 0 4px 6px -1px rgba(5, 150, 105, 0.2); }
+        .btn-danger { background: var(--danger); }
+
+        /* Layout Carrinho/Saída */
+        #carrinho-area { background: #fff7ed; border: 2px solid #ffedd5; padding: 20px; border-radius: 12px; margin-bottom: 25px; }
+        .item-carrinho { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #fed7aa; }
+
+        /* Layout Inventário MyMedia */
         #corpo-estoque-lista { display: flex; flex-direction: column; gap: 12px; }
-        .item-produto { background: white; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 4px; }
-        .item-produto.alerta { border-left: 6px solid var(--danger); background: #fff1f2; }
-        .valor-nome { font-size: 18px; font-weight: 800; color: var(--primary); }
-        .dado-linha { font-size: 14px; color: #334155; display: flex; }
-        .dado-linha b { min-width: 90px; color: #64748b; font-size: 11px; text-transform: uppercase; }
-        .valor-qtd { font-weight: 800; color: var(--success); }
-        .nav { display: flex; justify-content: space-between; align-items: center; background: var(--primary); color: white; padding: 15px 20px; border-radius: 12px; margin-bottom: 20px; }
+        .item-produto { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 12px; 
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column; 
+            gap: 6px;
+            transition: border-color 0.3s;
+        }
+        .item-produto:hover { border-color: var(--primary); }
+        .item-produto.alerta { border-left: 6px solid var(--danger); }
+        .valor-nome { font-size: 18px; font-weight: 800; color: var(--text); }
+        .dado-linha b { min-width: 100px; color: #94a3b8; font-size: 11px; text-transform: uppercase; }
+        .valor-qtd { font-weight: 800; color: var(--primary); font-size: 16px; }
+
+        /* Navbar */
+        .nav { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            background: var(--primary); 
+            color: white; 
+            padding: 18px 25px; 
+            border-radius: 14px; 
+            margin-bottom: 25px;
+            box-shadow: 0 4px 12px rgba(255, 102, 0, 0.3);
+        }
+        .nav b { font-size: 20px; letter-spacing: -0.5px; }
     </style>
 </head>
 <body>
@@ -36,62 +106,64 @@
     <div id="google_translate_element"></div>
 
     <div id="tela-login">
-        <div class="card" style="max-width: 380px; margin: 60px auto;">
-            <h2 style="text-align:center">Acesso</h2>
-            <div class="campo-box" style="margin-bottom:15px"><label>Usuário</label><input type="text" id="user"></div>
-            <div class="campo-box" style="margin-bottom:20px"><label>Senha</label><input type="password" id="pass"></div>
-            <button onclick="autenticar('login')" style="width:100%; margin-bottom:10px">Entrar</button>
-            <button onclick="autenticar('register')" style="width:100%; background:var(--success)">Registrar Novo</button>
+        <div class="card" style="max-width: 400px; margin: 80px auto; text-align: center;">
+            <h1 style="color: var(--primary); margin-bottom: 5px;">MyMedia</h1>
+            <p style="color: #64748b; margin-bottom: 30px;">Gestão de Inventário</p>
+            <div class="campo-box" style="text-align: left; margin-bottom: 15px;"><label>Usuário</label><input type="text" id="user" style="width:100%"></div>
+            <div class="campo-box" style="text-align: left; margin-bottom: 25px;"><label>Senha</label><input type="password" id="pass" style="width:100%"></div>
+            <button onclick="autenticar('login')" style="width:100%; margin-bottom:12px">Acessar Sistema</button>
+            <button onclick="autenticar('register')" style="width:100%; background: #f8fafc; color: var(--primary); border: 1px solid var(--primary);">Novo Cadastro</button>
         </div>
     </div>
 
     <div id="painel" class="hidden">
         <div class="nav">
-            <div>📦 <b>Expedição</b> | <span id="nome-exibir"></span></div>
-            <div style="display:flex; gap:8px">
-                <button onclick="aba('estoque')">Estoque</button>
-                <button id="btn-hist-nav" class="hidden" onclick="aba('hist')">Histórico</button>
-                <button onclick="location.reload()" style="background:var(--danger)">Sair</button>
+            <div>MYMEDIA | <b>EXPEDIÇÃO</b></div>
+            <div style="display:flex; gap:10px; align-items: center;">
+                <span id="nome-exibir" style="font-size: 12px; opacity: 0.9;"></span>
+                <button onclick="aba('estoque')" style="background:rgba(255,255,255,0.2); font-size:12px; box-shadow:none;">Estoque</button>
+                <button id="btn-hist-nav" class="hidden" onclick="aba('hist')" style="background:rgba(255,255,255,0.2); font-size:12px; box-shadow:none;">Histórico</button>
+                <button onclick="location.reload()" style="background:white; color:var(--primary); font-size:12px; box-shadow:none;">Sair</button>
             </div>
         </div>
 
         <div id="aba-estoque" class="card">
             <div id="carrinho-area" class="hidden">
-                <h4 style="margin:0 0 10px 0; color:var(--warning)">🛒 Itens para Saída</h4>
+                <h4 style="margin:0 0 15px 0; color:var(--primary)">🛒 Itens Preparados para Saída</h4>
                 <div id="lista-carrinho"></div>
-                <div style="margin-top:15px; display:flex; gap:10px">
-                    <button onclick="finalizarSaida()" style="background:var(--warning)">Gerar Pedido e Dar Baixa</button>
-                    <button onclick="cancelarSaida()" style="background:#64748b">Limpar</button>
+                <div style="margin-top:20px; display:flex; gap:12px">
+                    <button onclick="finalizarSaida()" style="background:var(--primary)">Finalizar Pedido (PDF)</button>
+                    <button onclick="cancelarSaida()" style="background:#cbd5e1; color:#475569">Limpar Tudo</button>
                 </div>
             </div>
 
             <div id="area-admin" class="hidden">
-                <h4 style="margin-top:0">⚙️ Lançamento</h4>
-                <div class="painel-horizontal">
-                    <div class="campo-box" style="width:120px"><label>Código</label><input type="text" id="p-cod" oninput="buscaAuto(this.value)"></div>
-                    <div class="campo-box" style="width:250px"><label>Nome do Produto</label><input type="text" id="p-nome"></div>
+                <h4 style="margin-top:0; color: #64748b; font-size: 14px; text-transform: uppercase;">Lançamento e Controle</h4>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 25px; align-items: flex-end;">
+                    <div class="campo-box" style="width:130px"><label>Código</label><input type="text" id="p-cod" oninput="buscaAuto(this.value)"></div>
+                    <div class="campo-box" style="flex:1; min-width: 200px;"><label>Nome do Produto</label><input type="text" id="p-nome"></div>
                     <div class="campo-box" style="width:80px"><label>Qtd</label><input type="number" id="p-qtd" value="1"></div>
                     <div class="campo-box" style="width:80px"><label>Mín</label><input type="number" id="p-min" value="5"></div>
                 </div>
-                <div style="display:flex; gap:10px; flex-wrap: wrap; margin-bottom: 25px;">
-                    <button onclick="lancar('ENTRADA')" style="background:var(--success)">+ Entrada</button>
-                    <button onclick="addCarrinho()" style="background:var(--accent)">- Preparar Saída</button>
-                    <label style="background:#157347; color:white; padding:10px; border-radius:6px; cursor:pointer; font-weight:700; font-size:13px">
+                <div style="display:flex; gap:12px; flex-wrap: wrap; margin-bottom: 30px;">
+                    <button onclick="lancar('ENTRADA')" class="btn-success">+ Entrada no Estoque</button>
+                    <button onclick="addCarrinho()">- Preparar Saída</button>
+                    <label style="background:#475569; color:white; padding:12px 20px; border-radius:8px; cursor:pointer; font-weight:700; font-size:13px">
                         📥 Importar Excel
                         <input type="file" accept=".xlsx" style="display:none" onchange="importarMassa(this)">
                     </label>
-                    <button onclick="limparEstoqueTodo()" style="background:var(--danger)">Limpar Tudo</button>
+                    <button onclick="limparEstoqueTodo()" class="btn-danger">Zerar Tudo</button>
                 </div>
             </div>
 
-            <h3>📊 Inventário Geral</h3>
-            <input type="text" placeholder="Pesquisar..." onkeyup="filtrarLista(this.value)" style="margin-bottom:20px">
+            <h3 style="color: var(--text); border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">Inventário de Produtos</h3>
+            <input type="text" placeholder="🔍 Buscar por código ou nome..." onkeyup="filtrarLista(this.value)" style="width:100%; margin-bottom:25px; background: white; border: 1px solid #e2e8f0;">
             <div id="corpo-estoque-lista"></div>
         </div>
 
         <div id="aba-hist" class="card hidden">
-            <h3>🕒 Histórico de Movimentações</h3>
-            <div id="lista-hist-container" style="display:flex; flex-direction:column; gap:8px"></div>
+            <h3>🕒 Registro de Atividades</h3>
+            <div id="lista-hist-container" style="display:flex; flex-direction:column; gap:10px"></div>
         </div>
     </div>
 
@@ -110,20 +182,17 @@
             const u = document.getElementById('user').value.trim();
             const p = document.getElementById('pass').value;
             const res = await fetch(`${API}/auth/${modo}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({u, p}) });
-            
             if(res.ok) {
-                if(modo === 'register') {
-                    // MENSAGEM ADICIONADA AQUI
-                    alert("Usuário registrado com sucesso! Agora você já pode fazer o login.");
-                } else {
+                if(modo === 'register') alert("Usuário MyMedia registrado com sucesso!");
+                else {
                     userAtivo = await res.json();
                     document.getElementById('tela-login').classList.add('hidden');
                     document.getElementById('painel').classList.remove('hidden');
-                    document.getElementById('nome-exibir').innerText = userAtivo.u;
+                    document.getElementById('nome-exibir').innerText = userAtivo.u.toUpperCase();
                     if(userAtivo.isadmin) { document.getElementById('area-admin').classList.remove('hidden'); document.getElementById('btn-hist-nav').classList.remove('hidden'); }
                     carregar();
                 }
-            } else alert("Falha na operação!");
+            } else alert("Erro na autenticação.");
         }
 
         async function carregar() {
@@ -137,10 +206,10 @@
             container.innerHTML = estoque.map(p => `
                 <div class="item-produto ${p.qtd <= p.min ? 'alerta' : ''}" data-busca="${p.cod} ${p.nome}">
                     <div class="valor-nome">${p.nome}</div>
-                    <div class="dado-linha"><b>CÓDIGO:</b> ${p.cod}</div>
-                    <div class="dado-linha"><b>ESTOQUE:</b> <span class="valor-qtd">${p.qtd}</span></div>
-                    <div class="dado-linha"><b>MÍNIMO:</b> ${p.min}</div>
-                    ${userAtivo.isadmin ? `<button onclick="apagar('${p.cod}')" style="background:var(--danger); font-size:10px; width:fit-content; padding:5px; margin-top:5px">Excluir</button>` : ''}
+                    <div class="dado-linha"><b>Código:</b> ${p.cod}</div>
+                    <div class="dado-linha"><b>Qtd Atual:</b> <span class="valor-qtd">${p.qtd}</span></div>
+                    <div class="dado-linha"><b>Mínimo:</b> ${p.min}</div>
+                    ${userAtivo.isadmin ? `<button onclick="apagar('${p.cod}')" style="background:none; color:var(--danger); font-size:11px; width:fit-content; padding:0; box-shadow:none; margin-top:10px">× Remover do Sistema</button>` : ''}
                 </div>
             `).join('');
         }
@@ -158,7 +227,7 @@
         function renderCarrinho() {
             const lista = document.getElementById('lista-carrinho');
             lista.innerHTML = carrinho.map((item, index) => `
-                <div class="item-carrinho"><span>${item.nome} - Qtd: ${item.qtd}</span><button onclick="removerDoCarrinho(${index})" style="background:var(--danger); padding:2px 8px; font-size:11px">Remover</button></div>
+                <div class="item-carrinho"><span>${item.nome} (x${item.qtd})</span><button onclick="removerDoCarrinho(${index})" style="background:none; color:var(--danger); padding:0; box-shadow:none">Remover</button></div>
             `).join('');
         }
 
@@ -170,14 +239,11 @@
                 await fetch(`${API}/estoque`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({...ex, qtd: ex.qtd - item.qtd}) });
                 await fetch(`${API}/historico`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod: item.cod, nome: item.nome, qtd: item.qtd, tipo_mov: 'SAÍDA', usuario: userAtivo.u}) });
             }
-            gerarPDF(); carrinho = []; document.getElementById('carrinho-area').classList.add('hidden'); carregar();
-        }
-
-        function gerarPDF() {
             const { jsPDF } = window.jspdf; const doc = new jsPDF();
-            doc.text("PEDIDO DE EXPEDIÇÃO", 15, 20);
+            doc.text("MYMEDIA - PEDIDO DE SAÍDA", 15, 20);
             doc.autoTable({ startY: 30, head: [['Cód', 'Produto', 'Qtd']], body: carrinho.map(i => [i.cod, i.nome, i.qtd]) });
-            doc.save(`pedido.pdf`);
+            doc.save(`pedido_mymedia.pdf`);
+            carrinho = []; document.getElementById('carrinho-area').classList.add('hidden'); carregar();
         }
 
         function cancelarSaida() { carrinho = []; document.getElementById('carrinho-area').classList.add('hidden'); }
@@ -203,6 +269,7 @@
                     if(f.cod && f.nome) await fetch(`${API}/estoque`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod: f.cod.toString(), nome: f.nome, qtd: parseInt(f.qtd), min: parseInt(f.min) || 5}) });
                 }
                 carregar();
+                alert("Importação MyMedia concluída!");
             };
             r.readAsArrayBuffer(input.files[0]);
         }
@@ -217,16 +284,16 @@
             const res = await fetch(`${API}/historico`);
             const h = await res.json();
             document.getElementById('lista-hist-container').innerHTML = h.reverse().map(x => `
-                <div style="background:#fff; padding:10px; border-radius:6px; border-bottom:2px solid #eee; font-size:13px">
-                    <b>${new Date(x.data).toLocaleString()}</b> | 
-                    <span style="color:${x.tipo_mov === 'ENTRADA' ? 'green' : 'red'}">${x.tipo_mov}</span>: 
-                    [${x.cod}] ${x.nome} (${x.qtd}) - Por: ${x.usuario}
+                <div style="background:#f8fafc; padding:15px; border-radius:10px; border:1px solid #e2e8f0; font-size:13px">
+                    <b style="color:var(--primary)">${new Date(x.data).toLocaleString()}</b> | 
+                    <span style="font-weight:bold; color:${x.tipo_mov === 'ENTRADA' ? 'var(--success)' : 'var(--danger)'}">${x.tipo_mov}</span>: 
+                    [${x.cod}] ${x.nome} (Qtd: ${x.qtd}) - Operador: ${x.usuario}
                 </div>
             `).join('');
         }
 
-        async function apagar(c) { if(confirm("Remover?")) { await fetch(`${API}/estoque/${c}`, {method:'DELETE'}); carregar(); } }
-        async function limparEstoqueTodo() { if(confirm("Limpar Tudo?")) { for(let p of estoque) await fetch(`${API}/estoque/${p.cod}`, {method:'DELETE'}); carregar(); } }
+        async function apagar(c) { if(confirm("Excluir item?")) { await fetch(`${API}/estoque/${c}`, {method:'DELETE'}); carregar(); } }
+        async function limparEstoqueTodo() { if(confirm("Zerar estoque?")) { for(let p of estoque) await fetch(`${API}/estoque/${p.cod}`, {method:'DELETE'}); carregar(); } }
         function buscaAuto(c) { const p = estoque.find(x => x.cod == c.trim()); if(p) { document.getElementById('p-nome').value = p.nome; document.getElementById('p-min').value = p.min; } }
         function filtrarLista(v) {
             const termo = v.toLowerCase();
