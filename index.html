@@ -12,7 +12,6 @@
         :root { 
             --primary: #ff6600; 
             --primary-dark: #e65c00;
-            --bg: #ffffff; 
             --text: #1e293b;
             --success: #059669;
             --danger: #be123c;
@@ -24,14 +23,47 @@
             margin: 0; 
             color: var(--text);
             min-height: 100vh;
-            /* FUNDO PADRÃO (OPÇÃO 3 - LOGIN) */
-            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), 
-                        url('https://images.unsplash.com/photo-1579547621453-625d5d6c8e31?q=80&w=1900&auto=format&fit=crop') no-repeat center center fixed;
-            background-size: cover;
+            background-color: #f1f5f9; /* Cor de fundo base */
         }
 
-        /* CLASSE PARA MUDAR O FUNDO APÓS LOGIN (OPÇÃO 1) */
-        body.logado {
+        /* TELA DE LOGIN - OPÇÃO 3 (Armazém) */
+        #tela-login {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), 
+                        url('https://images.unsplash.com/photo-1579547621453-625d5d6c8e31?q=80&w=1900&auto=format&fit=crop') no-repeat center center;
+            background-size: cover;
+            z-index: 9999;
+        }
+
+        /* CAIXA DE LOGIN COM TRANSPARÊNCIA (GLASS) */
+        .login-card {
+            background: rgba(255, 255, 255, 0.15); 
+            backdrop-filter: blur(15px); 
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2); 
+            padding: 40px; 
+            border-radius: 28px; 
+            width: 90%; 
+            max-width: 380px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); 
+            text-align: center; 
+            color: white;
+        }
+
+        .login-card input { 
+            background: rgba(255, 255, 255, 0.9); 
+            border: none; padding: 14px; 
+            border-radius: 12px; width: 100%; 
+            margin-bottom: 15px; box-sizing: border-box; 
+            color: #1e293b; 
+        }
+
+        /* FUNDO DO PAINEL APÓS LOGIN - OPÇÃO 1 (Abstrato Laranja) */
+        #painel.ativo {
+            min-height: 100vh;
             background: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.85)), 
                         url('https://images.unsplash.com/photo-1605379399642-870262d3d051?q=80&w=1900&auto=format&fit=crop') no-repeat center center fixed;
             background-size: cover;
@@ -39,20 +71,15 @@
 
         .hidden { display: none !important; }
 
-        /* LOGIN CARD */
-        #tela-login {
-            height: 100vh; display: flex; align-items: center; justify-content: center;
+        #painel { padding: 20px; }
+        .card { 
+            background: rgba(255, 255, 255, 0.95); 
+            padding: 25px; border-radius: 20px; 
+            border: 1px solid var(--border); 
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); 
+            margin: 0 auto 25px auto;
+            max-width: 1200px;
         }
-        .login-card {
-            background: rgba(255, 255, 255, 0.12); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2); padding: 40px; border-radius: 28px; width: 90%; max-width: 380px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); text-align: center; color: white;
-        }
-        .login-card input { background: rgba(255, 255, 255, 0.95); border: none; padding: 14px; border-radius: 12px; width: 100%; margin-bottom: 15px; box-sizing: border-box; color: #1e293b; }
-
-        /* PAINEL */
-        #painel { padding: 20px; max-width: 1200px; margin: 0 auto; }
-        .card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 25px; border-radius: 20px; border: 1px solid var(--border); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); margin-bottom: 25px; }
         
         button { padding: 12px 20px; border-radius: 10px; border: none; cursor: pointer; font-weight: 700; color: white; background: var(--primary); transition: 0.3s; }
         button:hover { background: var(--primary-dark); transform: translateY(-2px); }
@@ -69,6 +96,7 @@
         .dado-linha b { color: #94a3b8; font-size: 11px; min-width: 110px; text-transform: uppercase; }
 
         .nav { display: flex; justify-content: space-between; align-items: center; background: var(--primary); color: white; padding: 20px 25px; border-radius: 18px; margin-bottom: 25px; }
+        #google_translate_element { margin-bottom: 10px; text-align: right; }
     </style>
 </head>
 <body>
@@ -149,10 +177,14 @@
                 if(modo === 'register') alert("Registrado!");
                 else {
                     userAtivo = await res.json();
-                    document.body.classList.add('logado'); // MUDA O FUNDO
                     document.getElementById('tela-login').classList.add('hidden');
-                    document.getElementById('painel').classList.remove('hidden');
-                    if(userAtivo.isadmin) { document.getElementById('area-admin').classList.remove('hidden'); document.getElementById('btn-hist-nav').classList.remove('hidden'); }
+                    const painel = document.getElementById('painel');
+                    painel.classList.remove('hidden');
+                    painel.classList.add('ativo'); // Ativa o fundo abstrato laranja
+                    if(userAtivo.isadmin) { 
+                        document.getElementById('area-admin').classList.remove('hidden'); 
+                        document.getElementById('btn-hist-nav').classList.remove('hidden'); 
+                    }
                     carregar();
                 }
             } else alert("Erro!");
@@ -239,7 +271,7 @@
             const res = await fetch(`${API}/historico`);
             const h = await res.json();
             document.getElementById('lista-hist-container').innerHTML = h.reverse().map(x => `
-                <div style="background:rgba(248, 250, 252, 0.9); padding:15px; border-bottom:1px solid #eee; margin-bottom:10px; border-radius:12px;">
+                <div style="background: white; padding:15px; border-bottom:1px solid #eee; margin-bottom:10px; border-radius:12px;">
                     <b style="color:var(--primary); font-size:18px">${x.nome}</b> [${x.cod}]<br>
                     <small>${new Date(x.data).toLocaleString()} - <b>${x.tipo_mov}</b> (${x.qtd})</small>
                 </div>
