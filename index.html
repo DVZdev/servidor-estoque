@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Expedição v32</title>
+    <title>Sistema de Expedição v33</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -13,49 +13,42 @@
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; }
         .hidden { display: none !important; }
         
-        #google_translate_element { margin-bottom: 10px; text-align: right; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
         
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        /* ESTILO DAS ETIQUETAS - FORÇANDO FICAREM EM CIMA */
+        .bloco-input { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+        .bloco-input label { font-size: 13px; font-weight: 800; color: #334155; text-transform: uppercase; }
         
-        /* Ajuste para que a etiqueta fique grudada no input */
-        .campo-unidade { display: flex; flex-direction: column; gap: 4px; }
-        .campo-unidade label { font-size: 12px; font-weight: 700; color: #475569; }
+        input { padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 14px; transition: 0.2s; }
+        input:focus { border-color: var(--accent); outline: none; }
         
-        input { padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; width: 100%; box-sizing: border-box; font-size: 14px; }
-        button { padding: 12px 18px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; color: white; background: var(--accent); transition: 0.2s; }
+        /* GRID DO PAINEL ADMIN */
+        .painel-grid { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 25px; align-items: flex-end; }
         
-        .nav { display: flex; justify-content: space-between; align-items: center; background: var(--primary); color: white; padding: 15px 20px; border-radius: 10px; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        button { padding: 12px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 700; color: white; background: var(--accent); white-space: nowrap; }
         
-        /* Grid para manter tudo na mesma linha com rótulos em cima */
-        .grid-admin { 
-            display: grid; 
-            grid-template-columns: 1fr 2fr 1fr 1fr; 
-            gap: 15px; 
-            margin-bottom: 20px; 
-            align-items: end; 
-        }
-        
-        @media (max-width: 768px) { .grid-admin { grid-template-columns: 1fr; } }
+        .nav { display: flex; justify-content: space-between; align-items: center; background: var(--primary); color: white; padding: 15px 25px; border-radius: 12px; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #f1f5f9; }
+        th { background: #f8fafc; font-size: 12px; color: #64748b; }
+
+        @media (max-width: 900px) { .painel-grid { flex-direction: column; } .bloco-input { width: 100%; } }
     </style>
 </head>
 <body>
 
-    <div id="google_translate_element"></div>
-
     <div id="tela-login">
-        <div class="card" style="max-width: 380px; margin: 60px auto; border-top: 5px solid var(--accent);">
-            <h2 style="text-align:center">Acesso ao Sistema</h2>
-            <div class="campo-unidade">
+        <div class="card" style="max-width: 400px; margin: 80px auto; border-top: 6px solid var(--accent);">
+            <h2 style="text-align:center; margin-bottom:25px">Acesso</h2>
+            <div class="bloco-input">
                 <label>Usuário</label>
                 <input type="text" id="user" placeholder="Seu nome">
             </div>
-            <div class="campo-unidade" style="margin-top:10px;">
+            <div class="bloco-input" style="margin-top:15px;">
                 <label>Senha</label>
                 <input type="password" id="pass" placeholder="Sua senha">
             </div>
-            <div style="display:flex; gap:10px; margin-top:20px;">
+            <div style="display:flex; gap:10px; margin-top:25px;">
                 <button onclick="autenticar('login')" style="flex:1">Entrar</button>
                 <button onclick="autenticar('register')" style="flex:1; background:var(--success)">Registrar</button>
             </div>
@@ -64,8 +57,8 @@
 
     <div id="painel" class="hidden">
         <div class="nav">
-            <div>📦 <b>Expedição</b> | <span id="nome-exibir"></span></div>
-            <div style="display:flex; gap:8px">
+            <div>📦 <b>Expedição Digital</b> | <span id="nome-exibir"></span></div>
+            <div style="display:flex; gap:10px">
                 <button onclick="aba('estoque')">Estoque</button>
                 <button id="btn-hist-nav" class="hidden" onclick="aba('hist')">Histórico</button>
                 <button onclick="location.reload()" style="background:var(--danger)">Sair</button>
@@ -73,55 +66,55 @@
         </div>
 
         <div id="aba-estoque" class="card">
-            <div id="area-admin" class="hidden" style="margin-bottom: 25px; border-bottom: 2px solid #f1f5f9; padding-bottom: 25px;">
-                <h3 style="margin-top:0">⚙️ Painel de Controle (Admin)</h3>
+            <div id="area-admin" class="hidden" style="margin-bottom: 30px; border-bottom: 2px dashed #e2e8f0; padding-bottom: 30px;">
+                <h3 style="margin-top:0; color: var(--primary)">⚙️ Gerenciar Itens</h3>
                 
-                <div class="grid-admin">
-                    <div class="campo-unidade">
+                <div class="painel-grid">
+                    <div class="bloco-input" style="min-width: 120px;">
                         <label>Código</label>
-                        <input type="text" id="p-cod" placeholder="Ex: 1234" oninput="buscaAuto(this.value)">
+                        <input type="text" id="p-cod" placeholder="Código" oninput="buscaAuto(this.value)">
                     </div>
-                    <div class="campo-unidade">
+                    <div class="bloco-input" style="min-width: 250px;">
                         <label>Nome do Produto</label>
-                        <input type="text" id="p-nome" placeholder="Ex: Garrafa">
+                        <input type="text" id="p-nome" placeholder="Nome Completo">
                     </div>
-                    <div class="campo-unidade">
-                        <label>Quantidade</label>
+                    <div class="bloco-input" style="min-width: 100px;">
+                        <label>Qtd</label>
                         <input type="number" id="p-qtd" value="1">
                     </div>
-                    <div class="campo-unidade">
-                        <label>Mínimo</label>
+                    <div class="bloco-input" style="min-width: 100px;">
+                        <label>Estoque Mín</label>
                         <input type="number" id="p-min" value="5">
                     </div>
                 </div>
 
-                <div style="display:flex; gap:10px; flex-wrap: wrap;">
-                    <button onclick="lancar('ENTRADA')" style="background:var(--success)">➕ Lançar Entrada</button>
-                    <button onclick="addCarrinho()">📝 Add p/ Saída</button>
-                    <label style="background:#157347; color:white; padding:12px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:14px;">
-                        📥 Importar Excel
+                <div style="display:flex; gap:12px; flex-wrap: wrap;">
+                    <button onclick="lancar('ENTRADA')" style="background:var(--success)">Lançar Entrada</button>
+                    <button onclick="addCarrinho()">Add para Saída</button>
+                    <label style="background:#157347; color:white; padding:12px 18px; border-radius:8px; cursor:pointer; font-weight:700; font-size:14px;">
+                        Importar Excel
                         <input type="file" accept=".xlsx" style="display:none" onchange="importarMassa(this)">
                     </label>
-                    <button onclick="limparEstoqueTodo()" style="background:var(--danger)">🗑️ Limpar Estoque Inteiro</button>
+                    <button onclick="limparEstoqueTodo()" style="background:var(--danger)">Limpar Tudo</button>
                 </div>
             </div>
 
-            <div id="box-saida" class="hidden" style="background:#fefce8; padding:20px; border-radius:10px; border: 1px solid #fef08a; margin-bottom:20px;">
+            <div id="box-saida" class="hidden" style="background:#fffbeb; padding:25px; border-radius:12px; border: 1px solid #fef3c7; margin-bottom:25px;">
                 <h4 style="margin-top:0">📋 Carrinho de Saída</h4>
-                <div id="itens-lista" style="margin-bottom:15px"></div>
-                <div class="campo-unidade">
-                    <label>Destino Final</label>
-                    <input type="text" id="destino" placeholder="Para onde vai?">
+                <div id="itens-lista" style="margin-bottom:15px; font-weight:600"></div>
+                <div class="bloco-input">
+                    <label>Destino da Mercadoria</label>
+                    <input type="text" id="destino" placeholder="Ex: Setor de Vendas">
                 </div>
-                <button onclick="finalizarSaida()" style="width:100%; background:var(--danger); margin-top:15px">Finalizar e Gerar PDF</button>
+                <button onclick="finalizarSaida()" style="width:100%; background:var(--danger); margin-top:20px">Finalizar Saída</button>
             </div>
 
             <h3>📊 Inventário Geral</h3>
-            <input type="text" placeholder="Pesquisar..." onkeyup="filtrarTabela(this.value)" style="margin-bottom:15px">
+            <input type="text" placeholder="Pesquisar por nome ou código..." onkeyup="filtrarTabela(this.value)" style="margin-bottom:20px; border-width: 2px;">
             <div style="overflow-x: auto;">
                 <table>
                     <thead>
-                        <tr><th>Cód</th><th>Produto</th><th>Qtd Atual</th><th>Mín</th><th>Ações</th></tr>
+                        <tr><th>Cód</th><th>Produto</th><th>Qtd Atual</th><th>Mínimo</th><th>Ações</th></tr>
                     </thead>
                     <tbody id="corpo-estoque"></tbody>
                 </table>
@@ -129,9 +122,9 @@
         </div>
 
         <div id="aba-hist" class="card hidden">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
-                <h3>🕒 Histórico</h3>
-                <button onclick="exportarExcel()" style="background:#157347">📗 Exportar Excel</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
+                <h3>🕒 Histórico de Movimentações</h3>
+                <button onclick="exportarExcel()" style="background:#157347">Exportar Excel</button>
             </div>
             <table id="tab-hist-full">
                 <thead>
@@ -142,13 +135,6 @@
         </div>
     </div>
 
-    <script type="text/javascript">
-        function googleTranslateElementInit() {
-            new google.translate.TranslateElement({pageLanguage: 'pt', layout: google.translate.TranslateElement.InlineLayout.SIMPLE}, 'google_translate_element');
-        }
-    </script>
-    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-
     <script>
         const API = 'https://servidor-estoque-8g56.onrender.com';
         let estoque = [], carrinho = [], userAtivo = null;
@@ -156,7 +142,7 @@
         async function autenticar(modo) {
             const u = document.getElementById('user').value.trim();
             const p = document.getElementById('pass').value;
-            if(!u || !p) return alert("Preencha tudo!");
+            if(!u || !p) return alert("Preencha usuário e senha!");
             try {
                 const res = await fetch(`${API}/auth/${modo}`, {
                     method: 'POST',
@@ -173,8 +159,8 @@
                         document.getElementById('btn-hist-nav').classList.remove('hidden');
                     }
                     carregar();
-                } else alert("Erro no Login.");
-            } catch(e) { alert("Conexão falhou!"); }
+                } else alert("Usuário ou senha incorretos.");
+            } catch(e) { alert("Erro de conexão com o servidor."); }
         }
 
         async function carregar() {
@@ -186,12 +172,12 @@
         function render() {
             const corpo = document.getElementById('corpo-estoque');
             corpo.innerHTML = estoque.map(p => `
-                <tr class="${p.qtd <= p.min ? 'alert-min' : ''}">
+                <tr style="${p.qtd <= p.min ? 'background:#fff1f2; color:#be123c' : ''}">
                     <td>${p.cod}</td>
                     <td>${p.nome}</td>
                     <td><b>${p.qtd}</b></td>
                     <td>${p.min}</td>
-                    <td>${userAtivo.isadmin ? `<button onclick="apagar('${p.cod}')" style="background:var(--danger); padding:4px 8px; font-size:11px">Excluir</button>` : '-'}</td>
+                    <td>${userAtivo.isadmin ? `<button onclick="apagar('${p.cod}')" style="background:var(--danger); padding:6px 10px; font-size:11px">Remover</button>` : '-'}</td>
                 </tr>
             `).join('');
         }
@@ -214,7 +200,7 @@
         }
 
         async function limparEstoqueTodo() {
-            if(confirm("Apagar tudo?")) {
+            if(confirm("Isso apagará TODO o estoque permanentemente. Tem certeza?")) {
                 for(let p of estoque) await fetch(`${API}/estoque/${p.cod}`, {method:'DELETE'});
                 carregar();
             }
@@ -228,7 +214,7 @@
                 for(let f of rows) {
                     if(f.cod && f.nome) await lancar('ENTRADA', { cod: f.cod.toString(), nome: f.nome, qtd: parseInt(f.qtd) || 0, min: parseInt(f.min) || 5 });
                 }
-                alert("Pronto!"); carregar();
+                alert("Importação concluída!"); carregar();
             };
             r.readAsArrayBuffer(input.files[0]);
         }
@@ -237,20 +223,20 @@
             const cod = document.getElementById('p-cod').value;
             const p = estoque.find(x => x.cod == cod);
             const q = parseInt(document.getElementById('p-qtd').value);
-            if(!p || p.qtd < q) return alert("Sem estoque!");
+            if(!p || p.qtd < q) return alert("Quantidade indisponível!");
             carrinho.push({cod: p.cod, nome: p.nome, qtd: q});
             document.getElementById('box-saida').classList.remove('hidden');
-            document.getElementById('itens-lista').innerHTML = carrinho.map(i => `<div>• ${i.qtd}x ${i.nome}</div>`).join('');
+            document.getElementById('itens-lista').innerHTML = carrinho.map(i => `• ${i.qtd}x ${i.nome}`).join('<br>');
         }
 
         async function finalizarSaida() {
             const d = document.getElementById('destino').value;
-            if(!d || carrinho.length === 0) return alert("Falta o destino!");
+            if(!d || carrinho.length === 0) return alert("Preencha o destino!");
             for(let it of carrinho) await lancar('SAÍDA', it);
             const doc = new jspdf.jsPDF();
-            doc.text("GUIA DE SAÍDA - " + d.toUpperCase(), 10, 10);
+            doc.text("GUIA DE EXPEDIÇÃO - DESTINO: " + d.toUpperCase(), 10, 10);
             doc.autoTable({ head: [['Item', 'Qtd']], body: carrinho.map(x => [x.nome, x.qtd]) });
-            doc.save(`saida.pdf`);
+            doc.save(`saida_expedicao.pdf`);
             carrinho = []; document.getElementById('box-saida').classList.add('hidden');
             carregar();
         }
@@ -267,9 +253,9 @@
             document.getElementById('corpo-hist').innerHTML = h.map(x => `<tr><td>${new Date(x.data).toLocaleString()}</td><td>${x.tipo_mov}</td><td>${x.nome}</td><td>${x.qtd}</td><td>${x.usuario}</td></tr>`).join('');
         }
 
-        async function apagar(c) { if(confirm("Excluir?")) { await fetch(`${API}/estoque/${c}`, {method:'DELETE'}); carregar(); } }
+        async function apagar(c) { if(confirm("Excluir item do sistema?")) { await fetch(`${API}/estoque/${c}`, {method:'DELETE'}); carregar(); } }
         function buscaAuto(c) { const p = estoque.find(x => x.cod == c.trim()); if(p) { document.getElementById('p-nome').value = p.nome; document.getElementById('p-min').value = p.min; } }
-        function exportarExcel() { XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById('tab-hist-full')), "hist.xlsx"); }
+        function exportarExcel() { XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById('tab-hist-full')), "historico.xlsx"); }
         function filtrarTabela(v) { 
             const termo = v.toLowerCase();
             const linhas = document.querySelectorAll("#corpo-estoque tr");
