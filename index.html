@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Expedição v36</title>
+    <title>Sistema de Expedição v37</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -13,22 +13,24 @@
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; }
         .hidden { display: none !important; }
         
+        /* Tradutor no topo à direita */
         #google_translate_element { margin-bottom: 15px; text-align: right; }
         
         .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
         
-        /* Layout Vertical solicitado */
-        .area-lancamento { display: flex; flex-direction: column; gap: 12px; max-width: 450px; margin-bottom: 20px; }
-        .campo-grupo { display: flex; flex-direction: column; gap: 4px; }
-        .campo-grupo label { font-size: 13px; font-weight: 800; color: #475569; text-transform: uppercase; }
+        /* LAYOUT VERTICAL DOS CAMPOS (UM EMBAIXO DO OUTRO) */
+        .coluna-campos { display: flex; flex-direction: column; gap: 15px; max-width: 400px; margin-bottom: 25px; }
+        .bloco { display: flex; flex-direction: column; gap: 5px; }
+        .bloco label { font-size: 13px; font-weight: 800; color: #475569; text-transform: uppercase; }
         
         input { padding: 12px; border: 2px solid #cbd5e1; border-radius: 8px; font-size: 14px; width: 100%; box-sizing: border-box; }
         button { padding: 12px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 700; color: white; background: var(--accent); }
         
         .nav { display: flex; justify-content: space-between; align-items: center; background: var(--primary); color: white; padding: 15px 25px; border-radius: 12px; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; background: white; }
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid #f1f5f9; }
-        th { background: #f8fafc; color: #64748b; font-size: 12px; }
+        th { background: #f8fafc; color: #64748b; font-size: 12px; font-weight: bold; }
+        tr:hover { background-color: #fcfcfc; }
     </style>
 </head>
 <body>
@@ -36,24 +38,18 @@
     <div id="google_translate_element"></div>
 
     <div id="tela-login">
-        <div class="card" style="max-width: 400px; margin: 60px auto;">
-            <h2 style="text-align:center">Acesso</h2>
-            <div class="campo-grupo">
-                <label>Usuário</label>
-                <input type="text" id="user">
-            </div>
-            <div class="campo-grupo" style="margin-top:10px">
-                <label>Senha</label>
-                <input type="password" id="pass">
-            </div>
+        <div class="card" style="max-width: 400px; margin: 60px auto; border-top: 5px solid var(--accent);">
+            <h2 style="text-align:center">Entrar no Sistema</h2>
+            <div class="bloco"><label>Usuário</label><input type="text" id="user"></div>
+            <div class="bloco" style="margin-top:10px"><label>Senha</label><input type="password" id="pass"></div>
             <button onclick="autenticar('login')" style="width:100%; margin-top:20px">Entrar</button>
-            <button onclick="autenticar('register')" style="width:100%; margin-top:10px; background:var(--success)">Registrar</button>
+            <button onclick="autenticar('register')" style="width:100%; margin-top:10px; background:var(--success)">Registrar Novo</button>
         </div>
     </div>
 
     <div id="painel" class="hidden">
         <div class="nav">
-            <div>📦 <b>Expedição</b> | <span id="nome-exibir"></span></div>
+            <div>📦 <b>Sistema Expedição</b> | <span id="nome-exibir"></span></div>
             <div style="display:flex; gap:10px">
                 <button onclick="aba('estoque')">Estoque</button>
                 <button id="btn-hist-nav" class="hidden" onclick="aba('hist')">Histórico</button>
@@ -62,45 +58,45 @@
         </div>
 
         <div id="aba-estoque" class="card">
-            <div id="area-admin" class="hidden" style="border-bottom: 2px solid #f1f5f9; padding-bottom: 25px; margin-bottom: 25px;">
-                <h3 style="margin-top:0">⚙️ Lançamento Vertical</h3>
+            <div id="area-admin" class="hidden" style="border-bottom: 2px solid #eee; padding-bottom: 25px; margin-bottom: 25px;">
+                <h3 style="margin-top:0">⚙️ Lançar Novo Produto</h3>
                 
-                <div class="area-lancamento">
-                    <div class="campo-grupo">
+                <div class="coluna-campos">
+                    <div class="bloco">
                         <label>Código</label>
-                        <input type="text" id="p-cod" oninput="buscaAuto(this.value)">
+                        <input type="text" id="p-cod" oninput="buscaAuto(this.value)" placeholder="Digite o código">
                     </div>
-                    <div class="campo-grupo">
-                        <label>Nome</label>
-                        <input type="text" id="p-nome">
+                    <div class="bloco">
+                        <label>Nome do Produto</label>
+                        <input type="text" id="p-nome" placeholder="Digite o nome">
                     </div>
-                    <div class="campo-grupo">
+                    <div class="bloco">
                         <label>Quantidade</label>
                         <input type="number" id="p-qtd" value="1">
                     </div>
-                    <div class="campo-grupo">
-                        <label>Mínimo</label>
+                    <div class="bloco">
+                        <label>Mínimo em Estoque</label>
                         <input type="number" id="p-min" value="5">
                     </div>
                 </div>
 
                 <div style="display:flex; gap:10px; flex-wrap: wrap;">
                     <button onclick="lancar('ENTRADA')" style="background:var(--success)">Lançar Entrada</button>
-                    <button onclick="addCarrinho()">Add Saída</button>
-                    <label style="background:#157347; color:white; padding:12px; border-radius:8px; cursor:pointer; font-weight:700;">
-                        📥 Importar Excel
+                    <button onclick="addCarrinho()">Preparar Saída</button>
+                    <label style="background:#157347; color:white; padding:12px; border-radius:8px; cursor:pointer; font-weight:bold;">
+                        📥 Importar Planilha
                         <input type="file" accept=".xlsx" style="display:none" onchange="importarMassa(this)">
                     </label>
                     <button onclick="limparEstoqueTodo()" style="background:var(--danger)">Limpar Tudo</button>
                 </div>
             </div>
 
-            <h3>📊 Inventário Geral</h3>
-            <input type="text" placeholder="Pesquisar..." onkeyup="filtrarTabela(this.value)" style="margin-bottom:20px;">
+            <h3>📊 Inventário Geral (Lista)</h3>
+            <input type="text" placeholder="Pesquisar por nome ou código..." onkeyup="filtrarTabela(this.value)" style="margin-bottom:20px;">
             <div style="overflow-x: auto;">
                 <table>
                     <thead>
-                        <tr><th>Cód</th><th>Produto</th><th>Qtd Atual</th><th>Mín</th><th>Ações</th></tr>
+                        <tr><th>Cód</th><th>Produto</th><th>Qtd Atual</th><th>Mín</th><th>Ação</th></tr>
                     </thead>
                     <tbody id="corpo-estoque"></tbody>
                 </table>
@@ -129,7 +125,7 @@
         async function autenticar(modo) {
             const u = document.getElementById('user').value.trim();
             const p = document.getElementById('pass').value;
-            if(!u || !p) return alert("Preencha!");
+            if(!u || !p) return alert("Preencha os dados!");
             try {
                 const res = await fetch(`${API}/auth/${modo}`, {
                     method: 'POST',
@@ -146,8 +142,8 @@
                         document.getElementById('btn-hist-nav').classList.remove('hidden');
                     }
                     carregar();
-                } else alert("Erro!");
-            } catch(e) { alert("Conexão falhou!"); }
+                } else alert("Usuário/Senha incorretos.");
+            } catch(e) { alert("Erro de conexão."); }
         }
 
         async function carregar() {
@@ -158,14 +154,14 @@
 
         function render() {
             const corpo = document.getElementById('corpo-estoque');
-            // Aqui garantimos que cada item do estoque vire uma linha (tr) na tabela
+            // GARANTE QUE CADA PRODUTO SEJA UMA LINHA SEPARADA (UM EMBAIXO DO OUTRO)
             corpo.innerHTML = estoque.map(p => `
                 <tr style="${p.qtd <= p.min ? 'background:#fff1f2; color:#be123c' : ''}">
                     <td>${p.cod}</td>
                     <td>${p.nome}</td>
                     <td><b>${p.qtd}</b></td>
                     <td>${p.min}</td>
-                    <td>${userAtivo.isadmin ? `<button onclick="apagar('${p.cod}')" style="background:var(--danger); padding:5px 10px; font-size:11px">Excluir</button>` : '-'}</td>
+                    <td>${userAtivo.isadmin ? `<button onclick="apagar('${p.cod}')" style="background:var(--danger); padding:5px 10px; font-size:11px">Remover</button>` : '-'}</td>
                 </tr>
             `).join('');
         }
@@ -194,10 +190,12 @@
             r.onload = async (e) => {
                 const data = new Uint8Array(e.target.result);
                 const wb = XLSX.read(data, {type: 'array'});
-                // range: 1 pula o cabeçalho. header: determina a ordem das colunas
+                // Lê o excel ignorando a linha 1 (cabeçalho)
                 const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: ["cod", "nome", "qtd", "min"], range: 1});
                 
-                // Processa um por um para garantir que fiquem separados no banco
+                alert("Importando itens... Por favor, aguarde o aviso de conclusão.");
+
+                // IMPORTANTE: O loop 'for...of' com 'await' garante que um item entre de cada vez
                 for(const f of rows) {
                     if(f.cod && f.nome) {
                         await lancar('ENTRADA', {
@@ -208,13 +206,13 @@
                         });
                     }
                 }
-                alert("Importação finalizada!");
+                alert("Concluído! Todos os produtos foram importados um embaixo do outro.");
             };
             r.readAsArrayBuffer(input.files[0]);
         }
 
         async function limparEstoqueTodo() {
-            if(confirm("Apagar tudo?")) {
+            if(confirm("Deseja apagar TODOS os registros?")) {
                 for(let p of estoque) await fetch(`${API}/estoque/${p.cod}`, {method:'DELETE'});
                 carregar();
             }
@@ -225,7 +223,7 @@
             document.getElementById('aba-hist').classList.toggle('hidden', t !== 'hist');
         }
 
-        async function apagar(c) { if(confirm("Remover?")) { await fetch(`${API}/estoque/${c}`, {method:'DELETE'}); carregar(); } }
+        async function apagar(c) { if(confirm("Excluir item?")) { await fetch(`${API}/estoque/${c}`, {method:'DELETE'}); carregar(); } }
         function buscaAuto(c) { const p = estoque.find(x => x.cod == c.trim()); if(p) { document.getElementById('p-nome').value = p.nome; document.getElementById('p-min').value = p.min; } }
         function filtrarTabela(v) { 
             const termo = v.toLowerCase();
