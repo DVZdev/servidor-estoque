@@ -1,4 +1,4 @@
-const express = require('express');
+// Conexão Segura com o Bancoconst express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
 const app = express();
