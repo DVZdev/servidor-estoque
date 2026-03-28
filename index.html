@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Expedição v29</title>
+    <title>Sistema de Expedição v30</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -17,7 +17,6 @@
         
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
         
-        /* Estilo das Etiquetas que você pediu */
         .campo-grupo { display: flex; flex-direction: column; gap: 4px; width: 100%; }
         .campo-grupo label { font-size: 13px; font-weight: 700; color: #475569; margin-left: 2px; }
         
@@ -95,6 +94,7 @@
                         📥 Importar Excel
                         <input type="file" accept=".xlsx" style="display:none" onchange="importarMassa(this)">
                     </label>
+                    <button onclick="limparEstoqueTodo()" style="background:var(--danger)">🗑️ Limpar Estoque Inteiro</button>
                 </div>
             </div>
 
@@ -166,7 +166,7 @@
                         document.getElementById('btn-hist-nav').classList.remove('hidden');
                     }
                     carregar();
-                } else alert("Erro no Login. Verifique se o servidor terminou o deploy.");
+                } else alert("Erro no Login.");
             } catch(e) { alert("Erro de conexão!"); }
         }
 
@@ -206,6 +206,19 @@
             await fetch(`${API}/estoque`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({...item, qtd: finalQtd}) });
             await fetch(`${API}/historico`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod: item.cod, nome: item.nome, qtd: item.qtd, tipo_mov: tipo, usuario: userAtivo.u}) });
             carregar();
+        }
+
+        // FUNÇÃO PARA LIMPAR TUDO
+        async function limparEstoqueTodo() {
+            if(confirm("ATENÇÃO: Isso apagará TODOS os produtos do estoque permanentemente. Deseja continuar?")) {
+                if(confirm("TEM CERTEZA ABSOLUTA? Esta ação não pode ser desfeita.")) {
+                    for(let p of estoque) {
+                        await fetch(`${API}/estoque/${p.cod}`, {method:'DELETE'});
+                    }
+                    alert("Estoque limpo com sucesso!");
+                    carregar();
+                }
+            }
         }
 
         function importarMassa(input) {
