@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Sistema de Expedição v13 - PostgreSQL Cloud</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        :root { --primary: #1e293b; --accent: #2563eb; --bg: #f1f5f9; --text: #0f172a; --danger: #be123c; --success: #059669; --warning: #f59e0b; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        .hidden { display: none !important; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; border: 1px solid #e2e8f0; }
+        input, select { padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; margin: 5px 0; width: 100%; box-sizing: border-box; }
+        button { padding: 10px 15px; border-radius: 4px; border: none; cursor: pointer; font-weight: 600; color: white; background: var(--accent); transition: 0.2s; }
+        button:hover { opacity: 0.9; }
+        .user-header { display: flex; justify-content: space-between; align-items: center; background: var(--primary); color: white; padding: 15px 25px; border-radius: 8px; margin-bottom: 20px; }
+        .layout { display: grid; grid-template-columns: 1fr 380px; gap: 20px; }
+        .alerta-minimo { background: #fff1f2 !important; border-left: 5px solid var(--danger); }
+        .alerta-minimo td { color: var(--danger); font-weight: bold; }
+        #admin-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        .modal-content { background: white; padding: 30px; border-radius: 12px; width: 500px; max-height: 80vh; overflow-y: auto; position: relative; }
+        #db-loader { font-size: 11px; color: #10b981; margin-left: 10px; }
+    </style>
+</head>
+<body>
+
+<div id="auth-screen">
+    <div class="card" style="max-width: 400px; margin: 80px auto; border-top: 5px solid var(--accent);">
+        <h2 style="text-align:center">Acesso ao Sistema</h2>
+        <input type="text" id="auth-user" placeholder="Usuário">
+        <input type="password" id="auth-pass" placeholder="Senha">
+        <div style="display:flex; gap:10px; margin-top:10px;">
+            <button onclick="autenticar('login')" style="flex:1">Entrar</button>
+            <button onclick="autenticar('register')" style="flex:1; background:var(--success)">Registrar</button>
+        </div>
+        <p style="font-size:11px; color:#666; text-align:center; margin-top:15px;">Armazenamento em Nuvem Ativo.</p>
+    </div>
+</div>
+
+<div id="admin-modal" class="hidden">
+    <div class="modal-content">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h2 style="margin:0">⚙️ Painel Admin</h2>
+            <button onclick="fecharAdmin()" style="background:var(--danger)">Fechar X</button>
+        </div>
+        <div class="card">
+            <h4>Usuários no Banco de Dados</h4>
+            <table style="width:100%; text-align:left; border-collapse: collapse;">
+                <tbody id="lista-usuarios-admin"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="app" class="hidden">
+    <header class="user-header">
+        <div>👤 <strong id="display-username">---</strong> <span id="db-loader">● Sincronizado</span></div>
+        <div style="display:flex; gap:10px">
+            <button id="btn-admin-trigger" onclick="abrirAdmin()" class="hidden" style="background:#475569">⚙️ Painel Admin</button>
+            <button onclick="document.getElementById('csvInput').click()" style="background:#0ea5e9">📥 Importar Excel</button>
+            <input type="file" id="csvInput" class="hidden" accept=".csv" onchange="importarCSV(event)">
+            <button onclick="carregarEstoque()" style="background:var(--success)">🔄 Atualizar</button>
+            <button onclick="location.reload()" style="background:var(--danger)">Sair</button>
+        </div>
+    </header>
+
+    <div class="layout">
+        <div>
+            <div class="card">
+                <h3>📦 Movimentação</h3>
+                <div style="display: grid; grid-template-columns: 120px 1fr 100px 100px 100px; gap: 10px; align-items: end;">
+                    <div>Cód:<input type="text" id="p-cod" placeholder="Código"></div>
+                    <div>Produto:<input type="text" id="p-nome"></div>
+                    <div>Qtd:<input type="number" id="p-qtd" value="1"></div>
+                    <div>Tipo:<select id="p-tipo"><option value="un">UN</option><option value="pct">PCT</option></select></div>
+                    <div>Mín:<input type="number" id="p-min" value="5"></div>
+                </div>
+                <div style="margin-top: 15px; display: flex; gap: 10px;">
+                    <button onclick="movimentarEntrada()" style="flex:1; background:var(--success)">➕ Salvar no Banco</button>
+                    <button onclick="addPedido()" style="flex:1; background:var(--accent)">📝 Adicionar ao Pedido</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📊 Inventário</h3>
+                <input type="text" id="busca" placeholder="Filtrar por nome ou código..." onkeyup="render()">
+                <table style="width:100%; border-collapse: collapse; margin-top:10px;">
+                    <thead><tr style="text-align:left; border-bottom: 2px solid #eee;"><th>Cód</th><th>Item</th><th>Qtd</th><th>Tipo</th><th>Ações</th></tr></thead>
+                    <tbody id="corpo-estoque"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card" style="border-top: 5px solid var(--warning);">
+            <h3>📋 Lista de Pedido</h3>
+            <div id="lista-pedido" style="min-height: 100px; background: #f8fafc; border-radius: 4px; margin-bottom: 10px;"></div>
+            <div id="footer-pedido" class="hidden">
+                <input type="text" id="destino-pedido" placeholder="Destino do Pedido">
+                <button onclick="finalizarPedido()" style="width:100%; background:var(--danger); margin-top:10px;">Finalizar e Atualizar Banco</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_URL = 'https://servidor-estoque-8g56.onrender.com'; 
+
+    let estoque = [];
+    let pedidoAtual = [];
+    let usuarioLogado = null;
+
+    async function carregarEstoque() {
+        try {
+            const res = await fetch(`${API_URL}/estoque`);
+            estoque = await res.json();
+            render();
+            document.getElementById('db-loader').innerText = '● Conectado';
+        } catch(e) {
+            document.getElementById('db-loader').innerText = '○ Erro de Conexão';
+            console.error(e);
+        }
+    }
+
+    async function salvarNoBanco(item) {
+        await fetch(`${API_URL}/estoque`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(item)
+        });
+        carregarEstoque();
+    }
+
+    document.getElementById('p-cod').addEventListener('input', function() {
+        const p = estoque.find(x => x.cod === this.value.trim());
+        if(p) {
+            document.getElementById('p-nome').value = p.nome;
+            document.getElementById('p-tipo').value = p.tipo;
+            document.getElementById('p-min').value = p.min;
+        }
+    });
+
+    async function autenticar(modo) {
+        const u = document.getElementById('auth-user').value.trim();
+        const p = document.getElementById('auth-pass').value;
+        if(!u || !p) return alert("Preencha tudo!");
+
+        if(modo === 'register') {
+            try {
+                const res = await fetch(`${API_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ u, p, isadmin: false })
+                });
+                if(res.ok) alert("Conta criada no Banco de Dados!");
+                else alert("Usuário já existe ou erro no servidor.");
+            } catch(e) { alert("Erro de conexão."); }
+        } else {
+            try {
+                const res = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ u, p })
+                });
+                if(res.ok) {
+                    usuarioLogado = await res.json();
+                    entrarNoApp();
+                } else {
+                    alert("Login ou senha incorretos!");
+                }
+            } catch(e) { alert("Erro de conexão."); }
+        }
+    }
+
+    function entrarNoApp() {
+        document.getElementById('auth-screen').classList.add('hidden');
+        document.getElementById('app').classList.remove('hidden');
+        document.getElementById('display-username').innerText = usuarioLogado.u;
+        if(usuarioLogado.isadmin) document.getElementById('btn-admin-trigger').classList.remove('hidden');
+        carregarEstoque();
+    }
+
+    async function abrirAdmin() {
+        document.getElementById('admin-modal').classList.remove('hidden');
+        const lista = document.getElementById('lista-usuarios-admin');
+        lista.innerHTML = `<tr><td style="padding:10px">${usuarioLogado.u} <b>(LOGADO)</b></td></tr>`;
+    }
+    
+    function fecharAdmin() { document.getElementById('admin-modal').classList.add('hidden'); }
+
+    function render() {
+        const b = document.getElementById('busca').value.toLowerCase();
+        const corpo = document.getElementById('corpo-estoque');
+        corpo.innerHTML = '';
+        let ordenado = [...estoque].sort((a,b) => (parseInt(a.qtd) <= parseInt(a.min)) ? -1 : 1);
+        ordenado.forEach((p) => {
+            if(p.nome.toLowerCase().includes(b) || p.cod.includes(b)) {
+                const critico = parseInt(p.qtd) <= parseInt(p.min);
+                corpo.innerHTML += `<tr class="${critico ? 'alerta-minimo' : ''}">
+                    <td style="padding:10px">${p.cod}</td><td>${p.nome}</td><td>${p.qtd}</td><td>${p.tipo}</td>
+                    <td><button onclick="excluirItem('${p.cod}')" style="background:none; color:red">✖</button></td>
+                </tr>`;
+            }
+        });
+    }
+
+    async function excluirItem(codigo) {
+        if(confirm("Excluir registro permanentemente?")) {
+            await fetch(`${API_URL}/estoque/${codigo}`, { method: 'DELETE' });
+            carregarEstoque();
+        }
+    }
+
+    async function movimentarEntrada() {
+        const cod = document.getElementById('p-cod').value.trim();
+        const nome = document.getElementById('p-nome').value.trim();
+        const qtd = parseInt(document.getElementById('p-qtd').value);
+        const tipo = document.getElementById('p-tipo').value;
+        const min = parseInt(document.getElementById('p-min').value);
+        if(!nome || isNaN(qtd)) return alert("Preencha os dados!");
+        const ex = estoque.find(x => x.cod === cod);
+        const novaQtd = ex ? parseInt(ex.qtd) + qtd : qtd;
+        await salvarNoBanco({cod, nome, qtd: novaQtd, tipo, min});
+        alert("Sincronizado com sucesso!");
+    }
+
+    function addPedido() {
+        const cod = document.getElementById('p-cod').value.trim();
+        const p = estoque.find(x => x.cod === cod);
+        const qtd = parseInt(document.getElementById('p-qtd').value);
+        if(!p || parseInt(p.qtd) < qtd) return alert("Estoque insuficiente!");
+        pedidoAtual.push({cod, nome: p.nome, qtd, tipo: p.tipo});
+        renderPedido();
+    }
+
+    function renderPedido() {
+        const div = document.getElementById('lista-pedido');
+        document.getElementById('footer-pedido').classList.toggle('hidden', pedidoAtual.length === 0);
+        div.innerHTML = pedidoAtual.map((it, i) => `<div style="padding:5px; border-bottom:1px solid #eee;">${it.qtd} ${it.nome} <button onclick="pedidoAtual.splice(${i},1); renderPedido();" style="background:none; color:red; float:right">x</button></div>`).join('');
+    }
+
+    async function finalizarPedido() {
+        const dest = document.getElementById('destino-pedido').value;
+        if(!dest) return alert("Destino vazio!");
+        for(let it of pedidoAtual) {
+            const p = estoque.find(x => x.cod === it.cod);
+            const novaQtd = parseInt(p.qtd) - it.qtd;
+            await salvarNoBanco({cod: p.cod, nome: p.nome, qtd: novaQtd, tipo: p.tipo, min: p.min});
+        }
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.text(`EXPEDIÇÃO: ${dest} - ${new Date().toLocaleString()}`, 10, 10);
+        doc.autoTable({ head: [['Cód', 'Item', 'Qtd']], body: pedidoAtual.map(p => [p.cod, p.nome, p.qtd]) });
+        doc.save(`Pedido_${dest}.pdf`);
+        pedidoAtual = []; renderPedido(); carregarEstoque();
+    }
+
+    async function importarCSV(e) {
+        const reader = new FileReader();
+        reader.onload = async (f) => {
+            const linhas = f.target.result.split(/\r?\n/);
+            for(let l of linhas) {
+                const c = l.includes(';') ? l.split(';') : l.split(',');
+                if(c.length >= 3) {
+                    await salvarNoBanco({cod: c[0].trim(), nome: c[1].trim(), qtd: parseInt(c[2]), tipo: c[3]||'un', min: 5});
+                }
+            }
+            alert("Importação concluída!");
+        };
+        reader.readAsText(e.target.files[0], 'ISO-8859-1');
+    }
+</script>
+</body>
+</html>
