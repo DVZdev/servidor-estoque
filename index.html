@@ -72,6 +72,7 @@
         .alerta { border-left: 5px solid var(--danger); }
 
         .btn-excluir-item { color: var(--danger); font-weight: 800; cursor: pointer; border: none; background: none; padding: 5px 10px; font-size: 18px; }
+        .btn-editar-qtd { color: var(--primary); cursor: pointer; border: none; background: none; padding: 5px; font-size: 14px; margin-right: 5px; }
 
         .hist-item { background: #f8fafc; padding: 12px; border-radius: 12px; margin-bottom: 8px; font-size: 13px; border-left: 4px solid var(--primary); }
     </style>
@@ -173,12 +174,36 @@
             document.getElementById('corpo-estoque-lista').innerHTML = estoque.map(p => `
                 <div class="item-produto ${p.qtd <= (p.min || 0) ? 'alerta' : ''}" data-busca="${p.cod} ${p.nome}">
                     <div><b>${p.nome}</b><br><small>COD: ${p.cod}</small></div>
-                    <div style="display:flex; align-items:center; gap:15px">
-                        <div style="text-align:right"><b>${p.qtd}</b> un<br><small>Mín: ${p.min || 0}</small></div>
+                    <div style="display:flex; align-items:center; gap:10px">
+                        <div style="text-align:right">
+                            <span style="font-size: 1.1em;"><b>${p.qtd}</b> un</span>
+                            ${userAtivo && userAtivo.isadmin ? `<button class="btn-editar-qtd" title="Editar Quantidade" onclick="editarQtdRapido('${p.cod}', '${p.nome}', ${p.qtd})">✏️</button>` : ''}
+                            <br><small>Mín: ${p.min || 0}</small>
+                        </div>
                         ${userAtivo && userAtivo.isadmin ? `<button class="btn-excluir-item" onclick="excluirProduto('${p.cod}')">×</button>` : ''}
                     </div>
                 </div>
             `).join('');
+        }
+
+        async function editarQtdRapido(cod, nome, qtdAtual) {
+            const novaQtd = prompt(`Corrigir estoque de: ${nome}\nQuantidade atual: ${qtdAtual}\nDigite o novo valor total:`, qtdAtual);
+            if (novaQtd === null || novaQtd === "" || isNaN(novaQtd)) return;
+            
+            const p = estoque.find(x => x.cod == cod);
+            await fetch(`${API}/estoque`, { 
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify({...p, qtd: parseInt(novaQtd)}) 
+            });
+            
+            await fetch(`${API}/historico`, { 
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify({cod, nome, qtd: novaQtd, tipo_mov: 'AJUSTE', usuario: userAtivo.u}) 
+            });
+            
+            carregar();
         }
 
         async function excluirProduto(cod) {
@@ -189,7 +214,6 @@
 
         async function limparEstoqueTotal() {
             if(!confirm("ATENÇÃO: Isso apagará TODOS os produtos do estoque. Confirma?")) return;
-            // Deletar um por um (ou endpoint de bulk delete se existir)
             for(let p of estoque) {
                 await fetch(`${API}/estoque/${p.cod}`, { method: 'DELETE' });
             }
