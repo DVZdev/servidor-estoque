@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Sistema de Expedição v17</title>
+    <title>Sistema de Expedição v19 - Completo</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <style>
@@ -59,13 +59,13 @@
                         <select id="p-tipo"><option value="un">UN</option><option value="pct">PCT</option></select>
                     </div>
                     <div style="margin-top:15px; display:flex; gap:10px;">
-                        <button onclick="salvarMov('ENTRADA')" style="flex:1; background:var(--success)">➕ Entrada</button>
-                        <button onclick="addPedido()" style="flex:1; background:var(--accent)">📝 Add Pedido</button>
+                        <button onclick="salvarMov('ENTRADA')" style="flex:1; background:var(--success)">➕ Lançar Entrada</button>
+                        <button onclick="addPedido()" style="flex:1; background:var(--accent)">📝 Add ao Pedido</button>
                     </div>
                 </div>
                 <div class="card">
-                    <h3>📊 Inventário</h3>
-                    <input type="text" id="busca" placeholder="Buscar produto..." onkeyup="render()">
+                    <h3>📊 Inventário Atual</h3>
+                    <input type="text" id="busca" placeholder="Buscar produto ou código..." onkeyup="render()">
                     <table>
                         <thead><tr><th>Cód</th><th>Item</th><th>Qtd</th><th>Tipo</th></tr></thead>
                         <tbody id="corpo-estoque"></tbody>
@@ -74,45 +74,4 @@
             </div>
             <div id="bloco-pedido" class="card hidden">
                 <h3>📋 Lista de Pedido</h3>
-                <div id="lista-pedido" style="min-height: 50px; border: 1px dashed #ccc; padding: 10px;"></div>
-                <input type="text" id="destino-pedido" placeholder="Destino" style="margin-top:10px">
-                <button onclick="finalizarPedido()" style="width:100%; background:var(--danger); margin-top:10px;">Finalizar Saída</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="tab-historico" class="hidden">
-        <div class="card">
-            <h3>🕒 Histórico de Movimentação</h3>
-            <table>
-                <thead><tr><th>Data</th><th>Tipo</th><th>Item</th><th>Qtd</th><th>Destino</th><th>Usuário</th></tr></thead>
-                <tbody id="corpo-historico"></tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<script>
-    const API_URL = 'https://servidor-estoque-8g56.onrender.com'; 
-    let estoque = [], pedidoAtual = [], usuarioLogado = null;
-
-    async function autenticar(modo) {
-        const u = document.getElementById('auth-user').value.trim();
-        const p = document.getElementById('auth-pass').value;
-        if(!u || !p) return alert("Preencha tudo!");
-        try {
-            const res = await fetch(`${API_URL}/auth/${modo}`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ u, p })
-            });
-            if(res.ok) {
-                if(modo === 'register') alert("Registrado! Faça login.");
-                else { usuarioLogado = await res.json(); entrar(); }
-            } else { alert("Erro na autenticação."); }
-        } catch(e) { alert("Servidor Offline."); }
-    }
-
-    function entrar() {
-        document.getElementById('auth-screen').classList.add('hidden');
-        document.getElementById('app').classList.remove('hidden');
-        document.getElementById('display-username').innerText =
+                <div id="lista-pedido" style="min-height: 50px; border: 1px dashed #ccc; padding: 10px
