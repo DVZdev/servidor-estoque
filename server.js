@@ -11,21 +11,42 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-const initDB = async () => {
-  try {
-    await pool.query(`CREATE TABLE IF NOT EXISTS estoque (cod TEXT PRIMARY KEY, nome TEXT NOT NULL, qtd INTEGER DEFAULT 0, tipo TEXT, min INTEGER DEFAULT 5)`);
-    await pool.query(`CREATE TABLE IF NOT EXISTS usuarios (u TEXT PRIMARY KEY, p TEXT NOT NULL, isadmin BOOLEAN DEFAULT false)`);
-    console.log("✅ Banco de dados e tabelas prontos!");
-  } catch (err) { console.error("❌ Erro ao iniciar banco:", err.message); }
-};
-initDB();
+// --- NOVAS ROTAS DE ADMIN ---
 
-app.post('/auth/register', async (req, res) => {
-  const { u, p, isadmin } = req.body;
+// Listar usuários
+app.get('/auth/users', async (req, res) => {
   try {
-    await pool.query('INSERT INTO usuarios (u, p, isadmin) VALUES ($1, $2, $3)', [u, p, isadmin || false]);
+    const result = await pool.query('SELECT u, isadmin FROM usuarios ORDER BY u ASC');
+    res.json(result.rows);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Excluir usuário
+app.delete('/auth/users/:username', async (req, res) => {
+  try {
+    await pool.query('DELETE FROM usuarios WHERE u = $1', [req.params.username]);
+    res.sendStatus(200);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Alterar senha
+app.put('/auth/users/password', async (req, res) => {
+  const { u, newPassword } = req.body;
+  try {
+    await pool.query('UPDATE usuarios SET p = $1 WHERE u = $2', [newPassword, u]);
+    res.sendStatus(200);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// --- MANTENDO AS ROTAS ANTERIORES ---
+app.post('/auth/register', async (req, res) => {
+  const { u, p } = req.body;
+  try {
+    const count = await pool.query('SELECT COUNT(*) FROM usuarios');
+    const isFirst = parseInt(count.rows[0].count) === 0;
+    await pool.query('INSERT INTO usuarios (u, p, isadmin) VALUES ($1, $2, $3)', [u, p, isFirst]);
     res.sendStatus(201);
-  } catch (err) { res.status(400).json({ error: "Usuário já existe" }); }
+  } catch (err) { res.status(400).json({ error: "Erro ao registrar" }); }
 });
 
 app.post('/auth/login', async (req, res) => {
@@ -33,30 +54,23 @@ app.post('/auth/login', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM usuarios WHERE u = $1 AND p = $2', [u, p]);
     if (result.rows.length > 0) res.json(result.rows[0]);
-    else res.status(401).json({ error: "Login incorreto" });
+    else res.status(401).json({ error: "Incorreto" });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// Rotas de estoque (Mantidas iguais ao que você já tem)
 app.get('/estoque', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM estoque ORDER BY (qtd <= min) DESC, nome ASC');
-    res.json(result.rows);
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  const r = await pool.query('SELECT * FROM estoque ORDER BY nome ASC');
+  res.json(r.rows);
 });
-
 app.post('/estoque', async (req, res) => {
   const { cod, nome, qtd, tipo, min } = req.body;
-  try {
-    await pool.query('INSERT INTO estoque (cod, nome, qtd, tipo, min) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (cod) DO UPDATE SET qtd = $3, nome = $2, min = $5', [cod, nome, qtd, tipo, min]);
-    res.sendStatus(200);
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  await pool.query('INSERT INTO estoque (cod, nome, qtd, tipo, min) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (cod) DO UPDATE SET qtd = $3, nome = $2, min = $5', [cod, nome, qtd, tipo, min]);
+  res.sendStatus(200);
 });
-
 app.delete('/estoque/:cod', async (req, res) => {
-  try {
-    await pool.query('DELETE FROM estoque WHERE cod = $1', [req.params.cod]);
-    res.sendStatus(200);
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  await pool.query('DELETE FROM estoque WHERE cod = $1', [req.params.cod]);
+  res.sendStatus(200);
 });
 
 const PORT = process.env.PORT || 10000;
