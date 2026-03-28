@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Expedição v44</title>
+    <title>Sistema de Expedição v45</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -110,14 +110,20 @@
             const u = document.getElementById('user').value.trim();
             const p = document.getElementById('pass').value;
             const res = await fetch(`${API}/auth/${modo}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({u, p}) });
+            
             if(res.ok) {
-                userAtivo = await res.json();
-                document.getElementById('tela-login').classList.add('hidden');
-                document.getElementById('painel').classList.remove('hidden');
-                document.getElementById('nome-exibir').innerText = userAtivo.u;
-                if(userAtivo.isadmin) { document.getElementById('area-admin').classList.remove('hidden'); document.getElementById('btn-hist-nav').classList.remove('hidden'); }
-                carregar();
-            } else alert("Falha no acesso!");
+                if(modo === 'register') {
+                    // MENSAGEM ADICIONADA AQUI
+                    alert("Usuário registrado com sucesso! Agora você já pode fazer o login.");
+                } else {
+                    userAtivo = await res.json();
+                    document.getElementById('tela-login').classList.add('hidden');
+                    document.getElementById('painel').classList.remove('hidden');
+                    document.getElementById('nome-exibir').innerText = userAtivo.u;
+                    if(userAtivo.isadmin) { document.getElementById('area-admin').classList.remove('hidden'); document.getElementById('btn-hist-nav').classList.remove('hidden'); }
+                    carregar();
+                }
+            } else alert("Falha na operação!");
         }
 
         async function carregar() {
@@ -207,7 +213,6 @@
             if(t === 'hist') carregarHist();
         }
 
-        // --- HISTÓRICO ATUALIZADO COM O CÓDIGO DO PRODUTO ---
         async function carregarHist() {
             const res = await fetch(`${API}/historico`);
             const h = await res.json();
