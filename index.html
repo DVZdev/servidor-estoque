@@ -9,6 +9,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
     
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({pageLanguage: 'pt', layout: google.translate.TranslateElement.InlineLayout.SIMPLE}, 'google_translate_element');
+        }
+    </script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
     <style>
         :root { --primary: #ff6600; --success: #10b981; --danger: #ef4444; }
         * { font-family: 'Plus Jakarta Sans', sans-serif; box-sizing: border-box; transition: all 0.2s ease; }
@@ -18,6 +25,14 @@
             background: linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.85)), 
                         url('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=2000&auto=format&fit=crop') no-repeat center center fixed;
             background-size: cover; min-height: 100vh;
+        }
+
+        /* Estilo para o tradutor ficar discreto no topo */
+        #google_translate_element {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 10001;
         }
 
         .hidden { display: none !important; }
@@ -58,6 +73,8 @@
     </style>
 </head>
 <body>
+
+    <div id="google_translate_element"></div>
 
     <div id="modal-progresso" class="hidden">
         <h2 id="txt-progresso">Processando...</h2>
