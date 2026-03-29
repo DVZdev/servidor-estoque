@@ -108,7 +108,7 @@
                         <div style="display:grid; grid-template-columns: 1fr 2.5fr 1fr 1fr; gap:12px; margin-bottom:15px;">
                             <input type="text" id="p-cod" placeholder="Cód" oninput="buscaAuto(this.value)" style="padding:14px; border-radius:12px; border:1px solid #ddd">
                             <input type="text" id="p-nome" placeholder="Produto" style="padding:14px; border-radius:12px; border:1px solid #ddd">
-                            <input type="number" id="p-qtd" placeholder="Físico" style="padding:14px; border-radius:12px; border:1px solid #ddd">
+                            <input type="number" id="p-qtd" placeholder="Armazém" style="padding:14px; border-radius:12px; border:1px solid #ddd">
                             <input type="number" id="p-sis" placeholder="Sist." style="padding:14px; border-radius:12px; border:1px solid #ddd">
                         </div>
                         <div style="display:flex; gap:10px; flex-wrap: wrap;">
@@ -267,10 +267,7 @@
         async function carregarHist() {
             const res = await fetch(`${API}/historico`);
             let h = await res.json();
-            
-            // ORDENAÇÃO: Garante que os mais recentes fiquem no topo comparando as datas
             h.sort((a, b) => new Date(b.data) - new Date(a.data));
-
             document.getElementById('lista-hist-container').innerHTML = h.slice(0, 100).map(x => {
                 const dataFormatada = new Date(x.data).toLocaleString('pt-BR');
                 return `
@@ -325,7 +322,7 @@
         }
 
         async function editarRapido(cod, nome, qA, qS) {
-            const nA = prompt(`Novo Físico:`, qA); if(nA === null) return;
+            const nA = prompt(`Novo Armazém:`, qA); if(nA === null) return;
             const nS = prompt(`Novo Sistema:`, qS); if(nS === null) return;
             await fetch(`${API}/estoque`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod, nome, qtd: parseInt(nA), qtd_sistema: parseInt(nS)}) });
             carregar();
