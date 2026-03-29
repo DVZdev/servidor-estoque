@@ -23,7 +23,7 @@
 
         .hidden { display: none !important; }
 
-        /* TELA DE LOGIN COM FUNDO */
+        /* LOGIN COM FUNDO REATIVADO */
         #tela-login { 
             position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; 
             background: linear-gradient(rgba(15, 23, 42, 0.7), rgba(15, 23, 42, 0.7)), 
@@ -32,9 +32,9 @@
             z-index: 10000; 
         }
         .login-card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); padding: 40px; border-radius: 32px; width: 400px; text-align: center; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-        .login-card input { width: 100%; padding: 15px; margin-bottom: 12px; border-radius: 12px; border: none; outline: none; background: white; color: #0f172a; }
+        .login-card input { width: 100%; padding: 15px; margin-bottom: 12px; border-radius: 12px; border: none; outline: none; background: white; }
 
-        /* PAINEL */
+        /* INTERFACE */
         .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
         .header-nav { display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.98); padding: 15px 25px; border-radius: 20px; margin-bottom: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
         .card-principal { background: rgba(255, 255, 255, 0.98); border-radius: 24px; padding: 25px; min-height: 500px; box-shadow: 0 15px 35px rgba(0,0,0,0.4); }
@@ -70,8 +70,8 @@
             <p style="color: rgba(255,255,255,0.5); margin-bottom: 30px; font-size: 12px; font-weight: 600;">LOGÍSTICA & EXPEDIÇÃO</p>
             <input type="text" id="user" placeholder="Usuário">
             <input type="password" id="pass" placeholder="Senha">
-            <button class="btn btn-primary" style="width:100%; justify-content:center; margin-bottom: 10px;" onclick="autenticar('login')">ENTRAR</button>
-            <button class="btn" style="background:none; color:white; font-size:11px; width:100%" onclick="autenticar('register')">Criar novo registro</button>
+            <button class="btn btn-primary" style="width:100%; justify-content:center; margin-bottom: 10px;" onclick="autenticar('login')">ENTRAR NO SISTEMA</button>
+            <button class="btn" style="background:none; color:white; font-size:11px; width:100%" onclick="autenticar('register')">Ainda não tem conta? Criar Registro</button>
         </div>
     </div>
 
@@ -92,8 +92,8 @@
                         <h4 style="margin:0 0 10px 0;">🛒 Carrinho de Saída</h4>
                         <div id="lista-carrinho"></div>
                         <div style="margin-top:15px; display:flex; gap:10px">
-                            <button class="btn btn-success" onclick="finalizarPedido()">FINALIZAR E PDF</button>
-                            <button class="btn btn-ghost" onclick="limparCarrinho()">CANCELAR</button>
+                            <button class="btn btn-success" onclick="finalizarPedido()">FINALIZAR SAÍDA E PDF</button>
+                            <button class="btn btn-ghost" onclick="limparCarrinho()">LIMPAR TUDO</button>
                         </div>
                     </div>
 
@@ -105,7 +105,7 @@
                             <input type="number" id="p-sis" placeholder="Sist." style="padding:14px; border-radius:12px; border:1px solid #ddd">
                         </div>
                         <div style="display:flex; gap:10px; flex-wrap: wrap;">
-                            <button class="btn btn-success" onclick="lancar()">SALVAR</button>
+                            <button class="btn btn-success" onclick="lancar()">SALVAR / ATUALIZAR</button>
                             <button class="btn btn-primary" onclick="addAoCarrinho()">+ ADD PEDIDO</button>
                             <button class="btn btn-clear" onclick="limparEstoqueTotal()">ZERAR TUDO</button>
                             <label class="btn btn-ghost" style="cursor:pointer">📥 IMPORTAR EXCEL <input type="file" style="display:none" onchange="importarMassa(this)"></label>
@@ -117,7 +117,7 @@
                 </div>
 
                 <div id="aba-hist" class="hidden">
-                    <h3 style="margin-top:0">🕒 Histórico</h3>
+                    <h3 style="margin-top:0">🕒 Registro de Movimentações</h3>
                     <div id="lista-hist-container"></div>
                 </div>
             </div>
@@ -128,6 +128,7 @@
         const API = 'https://servidor-estoque-8g56.onrender.com';
         let estoque = [], carrinho = [], userAtivo = null;
 
+        // AUTH
         async function autenticar(modo) {
             const u = document.getElementById('user').value.trim();
             const p = document.getElementById('pass').value;
@@ -170,32 +171,42 @@
             }).join('');
         }
 
+        // IMPORTAR EXCEL (CORREÇÃO DEFINITIVA DO CAMPO SISTEMA)
         async function importarMassa(input) {
             const r = new FileReader();
             r.onload = async (e) => {
                 const wb = XLSX.read(new Uint8Array(e.target.result), {type: 'array'});
-                const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+                const sheet = wb.Sheets[wb.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(sheet);
                 if(!rows.length) return alert("Excel vazio!");
 
-                document.getElementById('txt-progresso').innerText = "Importando do Excel...";
+                document.getElementById('txt-progresso').innerText = "Sincronizando Excel...";
                 document.getElementById('modal-progresso').classList.remove('hidden');
-                let totalSinc = 0;
                 
+                let totalSinc = 0;
                 for(let f of rows) {
-                    // Normaliza os nomes das colunas para evitar erros de leitura
+                    // Limpeza de chaves para ignorar filtros do Excel
                     const fLimpo = {};
-                    Object.keys(f).forEach(k => fLimpo[k.toLowerCase().trim()] = f[k]);
+                    Object.keys(f).forEach(k => {
+                        const chaveLimpa = k.toString().toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                        fLimpo[chaveLimpa] = f[k];
+                    });
 
-                    const vCod = fLimpo.cod || fLimpo.codigo;
-                    const vNom = fLimpo.nome || fLimpo.produto;
-                    const vArm = fLimpo.qtd || 0;
-                    const vSis = fLimpo.sistema || 0; // Puxa direto da sua coluna 'sistema'
+                    const vCod = fLimpo.cod || fLimpo.codigo || fLimpo.id;
+                    const vNom = fLimpo.nome || fLimpo.produto || fLimpo.descricao;
+                    const vArm = fLimpo.qtd || fLimpo.armazem || 0;
+                    const vSis = fLimpo.sistema || fLimpo.qtd_sistema || 0;
 
                     if(vCod) {
                         await fetch(`${API}/estoque`, { 
                             method: 'POST', 
                             headers: {'Content-Type': 'application/json'}, 
-                            body: JSON.stringify({ cod: vCod.toString(), nome: vNom, qtd: parseInt(vArm), qtd_sistema: parseInt(vSis) }) 
+                            body: JSON.stringify({ 
+                                cod: vCod.toString(), 
+                                nome: vNom || "Item", 
+                                qtd: parseInt(vArm) || 0, 
+                                qtd_sistema: parseInt(vSis) || 0 
+                            }) 
                         });
                         totalSinc++;
                         document.getElementById('barra-preenchimento').style.width = (totalSinc / rows.length * 100) + "%";
@@ -203,26 +214,28 @@
                     }
                 }
                 
-                await fetch(`${API}/historico`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({nome: "Importação Excel", qtd: totalSinc, tipo_mov: 'SINC', usuario: userAtivo.u}) });
+                await fetch(`${API}/historico`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({nome: "Carga Excel", qtd: totalSinc, tipo_mov: 'SINC', usuario: userAtivo.u}) });
                 document.getElementById('modal-progresso').classList.add('hidden');
-                carregar(); alert("Finalizado!");
+                carregar(); alert("Excel importado com sucesso!");
             };
             r.readAsArrayBuffer(input.files[0]);
             input.value = "";
         }
 
+        // ZERAR TUDO COM BARRA DE PROGRESSO
         async function limparEstoqueTotal() {
-            if(!confirm("⚠️ Confirma a exclusão de TODOS os itens do banco?")) return;
-            document.getElementById('txt-progresso').innerText = "Limpando Banco...";
+            if(!confirm("⚠️ VOCÊ REALMENTE QUER EXCLUIR TUDO?")) return;
+            document.getElementById('txt-progresso').innerText = "Excluindo tudo...";
             document.getElementById('modal-progresso').classList.remove('hidden');
             let i = 0;
+            const total = estoque.length;
             for(let p of estoque) {
                 await fetch(`${API}/estoque/${p.cod}`, { method: 'DELETE' });
                 i++;
-                document.getElementById('barra-preenchimento').style.width = (i / estoque.length * 100) + "%";
-                document.getElementById('contagem-progresso').innerText = `${i} / ${estoque.length}`;
+                document.getElementById('barra-preenchimento').style.width = (i / total * 100) + "%";
+                document.getElementById('contagem-progresso').innerText = `${i} / ${total}`;
             }
-            await fetch(`${API}/historico`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({nome: "Limpeza Geral", qtd: i, tipo_mov: 'DELETE', usuario: userAtivo.u}) });
+            await fetch(`${API}/historico`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({nome: "Limpeza Total", qtd: i, tipo_mov: 'DELETE', usuario: userAtivo.u}) });
             document.getElementById('modal-progresso').classList.add('hidden');
             carregar();
         }
@@ -234,9 +247,9 @@
                 await fetch(`${API}/historico`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod: i.cod, nome: i.nome, qtd: i.qtd, tipo_mov: 'SAÍDA', usuario: userAtivo.u}) });
             }
             const { jsPDF } = window.jspdf; const doc = new jsPDF();
-            doc.text("MYMEDIA - PEDIDO", 15, 20);
+            doc.text("ROMANEIO DE SAÍDA", 15, 20);
             doc.autoTable({ head: [['Cód', 'Produto', 'Qtd']], body: carrinho.map(x => [x.cod, x.nome, x.qtd]), startY: 30 });
-            doc.save(`Pedido_${Date.now()}.pdf`);
+            doc.save(`Saida_${Date.now()}.pdf`);
             carrinho = []; renderCarrinho(); carregar();
         }
 
@@ -275,8 +288,8 @@
             if(!carrinho.length) document.getElementById('carrinho-area').classList.add('hidden');
         }
         async function editarRapido(cod, nome, qA, qS) {
-            const nA = prompt(`Novo Físico:`, qA); if(nA === null) return;
-            const nS = prompt(`Novo Sistema:`, qS); if(nS === null) return;
+            const nA = prompt(`Físico para ${nome}:`, qA); if(nA === null) return;
+            const nS = prompt(`Sistema para ${nome}:`, qS); if(nS === null) return;
             await fetch(`${API}/estoque`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod, nome, qtd: parseInt(nA), qtd_sistema: parseInt(nS)}) });
             carregar();
         }
