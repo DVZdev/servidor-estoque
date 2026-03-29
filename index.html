@@ -3,28 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyMedia - Sistema Completo</title>
+    <title>MyMedia - Sistema de Expedição</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
     
     <style>
-        :root { --primary: #ff6600; --primary-hover: #e65c00; --success: #10b981; --danger: #ef4444; --border: #f1f5f9; }
+        :root { --primary: #ff6600; --success: #10b981; --danger: #ef4444; --border: #f1f5f9; }
         * { font-family: 'Plus Jakarta Sans', sans-serif; box-sizing: border-box; transition: all 0.2s ease; }
-        body { margin: 0; padding: 0; background-color: #0f172a; }
+        body { margin: 0; padding: 0; background-color: #0f172a; color: #0f172a; }
         .hidden { display: none !important; }
 
         #tela-login { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: #0f172a; z-index: 10000; }
         .login-card { background: rgba(255, 255, 255, 0.1); padding: 40px; border-radius: 32px; width: 400px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
-        .login-card input { width: 100%; padding: 15px; margin-bottom: 12px; border-radius: 12px; border: none; }
+        .login-card input { width: 100%; padding: 15px; margin-bottom: 12px; border-radius: 12px; border: none; outline: none; }
 
         #painel.ativo { min-height: 100vh; padding: 20px; background: #0f172a; }
         .container { max-width: 1100px; margin: 0 auto; }
-        .header-nav { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 25px; border-radius: 20px; margin-bottom: 25px; }
-        .card-principal { background: white; border-radius: 24px; padding: 25px; min-height: 500px; }
+        .header-nav { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 25px; border-radius: 20px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .card-principal { background: white; border-radius: 24px; padding: 25px; min-height: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
 
-        .btn { padding: 12px 20px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+        .btn { padding: 12px 20px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-size: 14px; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-success { background: var(--success); color: white; }
         .btn-ghost { background: #f1f5f9; color: #64748b; }
@@ -38,20 +38,20 @@
 
         #modal-progresso { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 20000; display: flex; align-items: center; justify-content: center; flex-direction: column; color: white; }
         .progresso-container { width: 300px; height: 12px; background: #334155; border-radius: 6px; overflow: hidden; margin: 15px 0; }
-        #barra-preenchimento { width: 0%; height: 100%; background: var(--primary); }
+        #barra-preenchimento { width: 0%; height: 100%; background: var(--primary); transition: width 0.2s; }
     </style>
 </head>
 <body>
 
     <div id="modal-progresso" class="hidden">
-        <h3>Processando...</h3>
+        <h3>Sincronizando Dados...</h3>
         <div class="progresso-container"><div id="barra-preenchimento"></div></div>
-        <p id="contagem-progresso">0 / 0</p>
+        <p id="contagem-progresso">0 / 0 itens</p>
     </div>
 
     <div id="tela-login">
         <div class="login-card">
-            <h1 style="color:white;">MyMedia</h1>
+            <h1 style="color:white; margin-bottom: 30px;">MYMEDIA</h1>
             <input type="text" id="user" placeholder="Usuário">
             <input type="password" id="pass" placeholder="Senha">
             <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="autenticar('login')">Entrar</button>
@@ -74,7 +74,7 @@
                 <div id="aba-estoque">
                     
                     <div id="carrinho-area" class="hidden">
-                        <h4 style="margin:0 0 10px 0;">🛒 Itens Selecionados</h4>
+                        <h4 style="margin:0 0 10px 0;">🛒 Itens Selecionados para Saída</h4>
                         <div id="lista-carrinho"></div>
                         <div style="margin-top:15px; display:flex; gap:10px">
                             <button class="btn btn-success" onclick="finalizarPedido()">Gerar PDF e Baixar Estoque</button>
@@ -97,7 +97,7 @@
                         </div>
                     </div>
 
-                    <input type="text" placeholder="🔍 Filtrar lista..." style="width:100%; padding:15px; border-radius:15px; border:1px solid #eee; margin-bottom:20px;" onkeyup="filtrarLista(this.value)">
+                    <input type="text" placeholder="🔍 Filtrar por código ou nome..." style="width:100%; padding:15px; border-radius:15px; border:1px solid #eee; margin-bottom:20px;" onkeyup="filtrarLista(this.value)">
                     <div id="corpo-estoque-lista"></div>
                 </div>
 
@@ -144,15 +144,60 @@
                         <div class="grid-info">
                             <div>Armazém: <b>${p.qtd}</b></div>
                             <div>Sistema: <b>${qS}</b></div>
-                            <div style="color:${dif < 0 ? 'red' : 'green'}; font-weight:bold">Dif: ${dif}</div>
+                            <div style="color:${dif < 0 ? 'red' : (dif > 0 ? 'green' : '#64748b')}; font-weight:bold">Dif: ${dif}</div>
                         </div>
                     </div>
-                    <div style="display:flex; gap:10px">
-                        <button onclick="editarRapido('${p.cod}','${p.nome}',${p.qtd},${qS})" style="border:none; background:none; cursor:pointer">✏️</button>
-                        <button onclick="excluirProduto('${p.cod}')" style="border:none; background:none; cursor:pointer; color:red">❌</button>
+                    <div style="display:flex; gap:15px">
+                        <button onclick="editarRapido('${p.cod}','${p.nome}',${p.qtd},${qS})" style="border:none; background:none; cursor:pointer; font-size:18px">✏️</button>
+                        <button onclick="excluirProduto('${p.cod}')" style="border:none; background:none; cursor:pointer; color:red; font-size:18px">❌</button>
                     </div>
                 </div>`;
             }).join('');
+        }
+
+        async function importarMassa(input) {
+            const r = new FileReader();
+            r.onload = async (e) => {
+                const wb = XLSX.read(new Uint8Array(e.target.result), {type: 'array'});
+                const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+                
+                if(rows.length === 0) return alert("Excel vazio!");
+
+                document.getElementById('modal-progresso').classList.remove('hidden');
+                const barra = document.getElementById('barra-preenchimento');
+                const contagem = document.getElementById('contagem-progresso');
+
+                let c = 0;
+                for(const f of rows) {
+                    // MAPEAMENTO INTELIGENTE DE COLUNAS
+                    const vSistema = f.sistema || f.Sistema || f.qtd_sistema || f.sis || 0;
+                    const vArmazem = f.qtd || f.armazem || f.Armazém || f.Armazem || f.quantidade || 0;
+                    const vCodigo = f.cod || f.codigo || f.Código || f.Codigo || f.ID;
+                    const vNome = f.nome || f.produto || f.Nome || f.Produto;
+
+                    if(vCodigo) {
+                        await fetch(`${API}/estoque`, { 
+                            method: 'POST', 
+                            headers: {'Content-Type': 'application/json'}, 
+                            body: JSON.stringify({
+                                cod: vCodigo.toString(), 
+                                nome: vNome || "Sem nome", 
+                                qtd: parseInt(vArmazem), 
+                                qtd_sistema: parseInt(vSistema)
+                            }) 
+                        });
+                        c++;
+                        barra.style.width = (c / rows.length * 100) + "%";
+                        contagem.innerText = `${c} / ${rows.length} itens`;
+                    }
+                }
+                
+                document.getElementById('modal-progresso').classList.add('hidden');
+                carregar(); 
+                alert("Importação finalizada com sucesso!");
+            };
+            r.readAsArrayBuffer(input.files[0]);
+            input.value = "";
         }
 
         async function lancar() {
@@ -185,6 +230,7 @@
         }
 
         async function finalizarPedido() {
+            if(!confirm("Deseja finalizar o pedido e baixar o estoque?")) return;
             for(let i of carrinho) {
                 const ex = estoque.find(x => x.cod == i.cod);
                 await fetch(`${API}/estoque`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({...ex, qtd: ex.qtd - i.qtd}) });
@@ -195,26 +241,6 @@
             doc.autoTable({ head: [['Cód', 'Produto', 'Qtd']], body: carrinho.map(x => [x.cod, x.nome, x.qtd]), startY: 20 });
             doc.save(`pedido_${Date.now()}.pdf`);
             carrinho = []; renderCarrinho(); carregar();
-        }
-
-        async function importarMassa(input) {
-            const r = new FileReader();
-            r.onload = async (e) => {
-                const wb = XLSX.read(new Uint8Array(e.target.result), {type: 'array'});
-                const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: ["cod", "nome", "qtd", "qtd_sistema"], range: 1});
-                const validos = rows.filter(f => f.cod);
-                document.getElementById('modal-progresso').classList.remove('hidden');
-                let c = 0;
-                for(const f of validos) {
-                    await fetch(`${API}/estoque`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod: f.cod.toString(), nome: f.nome, qtd: parseInt(f.qtd)||0, qtd_sistema: parseInt(f.qtd_sistema)||0}) });
-                    c++;
-                    document.getElementById('barra-preenchimento').style.width = (c/validos.length*100) + "%";
-                    document.getElementById('contagem-progresso').innerText = `${c} / ${validos.length}`;
-                }
-                document.getElementById('modal-progresso').classList.add('hidden');
-                carregar(); alert("Excel Importado com sucesso!");
-            };
-            r.readAsArrayBuffer(input.files[0]);
         }
 
         async function carregarHist() {
@@ -231,8 +257,8 @@
             carregar();
         }
 
-        async function excluirProduto(cod) { if(confirm("Excluir item?")) { await fetch(`${API}/estoque/${cod}`, { method: 'DELETE' }); carregar(); } }
-        async function limparEstoqueTotal() { if(confirm("Zerar TODO o estoque?")) { for(let p of estoque) await fetch(`${API}/estoque/${p.cod}`, { method: 'DELETE' }); carregar(); } }
+        async function excluirProduto(cod) { if(confirm("Excluir item permanentemente?")) { await fetch(`${API}/estoque/${cod}`, { method: 'DELETE' }); carregar(); } }
+        async function limparEstoqueTotal() { if(confirm("CUIDADO: Isso vai apagar TODO o seu banco de dados. Confirma?")) { for(let p of estoque) await fetch(`${API}/estoque/${p.cod}`, { method: 'DELETE' }); carregar(); } }
         function aba(t) { document.getElementById('aba-estoque').classList.toggle('hidden', t !== 'estoque'); document.getElementById('aba-hist').classList.toggle('hidden', t !== 'hist'); if(t === 'hist') carregarHist(); }
         function buscaAuto(c) { const p = estoque.find(x => x.cod == c.trim()); if(p) { document.getElementById('p-nome').value = p.nome; document.getElementById('p-qtd').value = p.qtd; document.getElementById('p-sis').value = p.qtd_sistema || 0; } }
         function filtrarLista(v) { const t = v.toLowerCase(); document.querySelectorAll('.item-produto').forEach(el => el.style.display = el.getAttribute('data-busca').toLowerCase().includes(t) ? "flex" : "none"); }
