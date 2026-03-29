@@ -50,6 +50,7 @@
         }
 
         .container { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+        
         .header-nav {
             display: flex; justify-content: space-between; align-items: center;
             background: rgba(255, 255, 255, 0.95); padding: 15px 25px; border-radius: 20px;
@@ -67,13 +68,16 @@
         .btn-ghost { background: #f1f5f9; color: var(--text-sub); }
         .btn-clear { background: #fee2e2; color: var(--danger); font-size: 11px; padding: 8px 12px; }
         
-        #carrinho-area { background: #fff7ed; border: 2px dashed var(--primary); padding: 20px; border-radius: 20px; margin-bottom: 25px; }
         .item-produto { background: white; border: 1px solid var(--border); padding: 15px; border-radius: 16px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .alerta { border-left: 5px solid var(--danger); }
-
+        
         .btn-excluir-item { color: var(--danger); font-weight: 800; cursor: pointer; border: none; background: none; padding: 5px 10px; font-size: 18px; }
         .btn-editar-qtd { color: var(--primary); cursor: pointer; border: none; background: none; padding: 5px; font-size: 14px; margin-right: 5px; }
 
+        .grid-info { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; text-align: center; font-size: 12px; margin-top: 5px; color: var(--text-sub); }
+        .dif-negativa { color: var(--danger); font-weight: bold; }
+        .dif-positiva { color: var(--success); font-weight: bold; }
+
+        #carrinho-area { background: #fff7ed; border: 2px dashed var(--primary); padding: 20px; border-radius: 20px; margin-bottom: 25px; }
         .hist-item { background: #f8fafc; padding: 12px; border-radius: 12px; margin-bottom: 8px; font-size: 13px; border-left: 4px solid var(--primary); }
     </style>
 </head>
@@ -116,11 +120,11 @@
                         <div style="display:grid; grid-template-columns: 1fr 2fr 1fr 1fr; gap:10px; margin-bottom:15px;">
                             <input type="text" id="p-cod" placeholder="Cód" style="padding:12px; border-radius:10px; border:1px solid #ddd" oninput="buscaAuto(this.value)">
                             <input type="text" id="p-nome" placeholder="Produto" style="padding:12px; border-radius:10px; border:1px solid #ddd">
-                            <input type="number" id="p-qtd" placeholder="Qtd" style="padding:12px; border-radius:10px; border:1px solid #ddd">
-                            <input type="number" id="p-min" placeholder="Mín" style="padding:12px; border-radius:10px; border:1px solid #ddd">
+                            <input type="number" id="p-qtd" placeholder="Qtd Armazém" style="padding:12px; border-radius:10px; border:1px solid #ddd">
+                            <input type="number" id="p-sis" placeholder="Qtd Sistema" style="padding:12px; border-radius:10px; border:1px solid #ddd">
                         </div>
-                        <div style="display:flex; gap:10px; margin-bottom:25px; align-items: center;">
-                            <button class="btn btn-success" onclick="lancar('ENTRADA')">Entrada</button>
+                        <div style="display:flex; gap:10px; margin-bottom:25px; align-items: center; flex-wrap: wrap;">
+                            <button class="btn btn-success" onclick="lancar('ENTRADA')">Lançar/Atualizar</button>
                             <button class="btn btn-primary" onclick="addAoCarrinho()">+ Adicionar ao Pedido</button>
                             <button class="btn btn-clear" onclick="limparCampos()">Limpar Campos</button>
                             <button class="btn btn-clear" style="background:#ef4444; color:white" onclick="limparEstoqueTotal()">Limpar Todo Estoque</button>
@@ -171,38 +175,40 @@
         }
 
         function renderLista() {
-            document.getElementById('corpo-estoque-lista').innerHTML = estoque.map(p => `
-                <div class="item-produto ${p.qtd <= (p.min || 0) ? 'alerta' : ''}" data-busca="${p.cod} ${p.nome}">
-                    <div><b>${p.nome}</b><br><small>COD: ${p.cod}</small></div>
-                    <div style="display:flex; align-items:center; gap:10px">
-                        <div style="text-align:right">
-                            <span style="font-size: 1.1em;"><b>${p.qtd}</b> un</span>
-                            ${userAtivo && userAtivo.isadmin ? `<button class="btn-editar-qtd" title="Editar Quantidade" onclick="editarQtdRapido('${p.cod}', '${p.nome}', ${p.qtd})">✏️</button>` : ''}
-                            <br><small>Mín: ${p.min || 0}</small>
+            document.getElementById('corpo-estoque-lista').innerHTML = estoque.map(p => {
+                const qtdSis = p.qtd_sistema || 0;
+                const diferenca = p.qtd - qtdSis;
+                const classeDif = diferenca < 0 ? 'dif-negativa' : (diferenca > 0 ? 'dif-positiva' : '');
+
+                return `
+                <div class="item-produto" data-busca="${p.cod} ${p.nome}">
+                    <div style="flex: 1;">
+                        <b>${p.nome}</b><br><small>COD: ${p.cod}</small>
+                        <div class="grid-info">
+                            <div>Armazém: <b>${p.qtd}</b></div>
+                            <div>Sistema: <b>${qtdSis}</b></div>
+                            <div class="${classeDif}">Dif: <b>${diferenca}</b></div>
                         </div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px">
+                        ${userAtivo && userAtivo.isadmin ? `<button class="btn-editar-qtd" title="Editar" onclick="editarQtdRapido('${p.cod}', '${p.nome}', ${p.qtd}, ${qtdSis})">✏️</button>` : ''}
                         ${userAtivo && userAtivo.isadmin ? `<button class="btn-excluir-item" onclick="excluirProduto('${p.cod}')">×</button>` : ''}
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
-        async function editarQtdRapido(cod, nome, qtdAtual) {
-            const novaQtd = prompt(`Corrigir estoque de: ${nome}\nQuantidade atual: ${qtdAtual}\nDigite o novo valor total:`, qtdAtual);
-            if (novaQtd === null || novaQtd === "" || isNaN(novaQtd)) return;
+        async function editarQtdRapido(cod, nome, qtdArm, qtdSis) {
+            const novaArm = prompt(`Novo valor ARMAZÉM para ${nome}:`, qtdArm);
+            if (novaArm === null) return;
+            const novaSis = prompt(`Novo valor SISTEMA para ${nome}:`, qtdSis);
+            if (novaSis === null) return;
             
-            const p = estoque.find(x => x.cod == cod);
             await fetch(`${API}/estoque`, { 
                 method: 'POST', 
                 headers: {'Content-Type': 'application/json'}, 
-                body: JSON.stringify({...p, qtd: parseInt(novaQtd)}) 
+                body: JSON.stringify({cod, nome, qtd: parseInt(novaArm), qtd_sistema: parseInt(novaSis)}) 
             });
-            
-            await fetch(`${API}/historico`, { 
-                method: 'POST', 
-                headers: {'Content-Type': 'application/json'}, 
-                body: JSON.stringify({cod, nome, qtd: novaQtd, tipo_mov: 'AJUSTE', usuario: userAtivo.u}) 
-            });
-            
             carregar();
         }
 
@@ -224,7 +230,7 @@
             const cod = document.getElementById('p-cod').value;
             const qtd = parseInt(document.getElementById('p-qtd').value);
             const p = estoque.find(x => x.cod == cod);
-            if(!p || isNaN(qtd) || qtd > p.qtd) return alert("Erro no estoque ou quantidade!");
+            if(!p || isNaN(qtd) || qtd > p.qtd) return alert("Erro no estoque ou quantidade insuficiente!");
             carrinho.push({ cod: p.cod, nome: p.nome, qtd: qtd });
             document.getElementById('carrinho-area').classList.remove('hidden');
             renderCarrinho();
@@ -259,28 +265,39 @@
             document.getElementById('p-cod').value = '';
             document.getElementById('p-nome').value = '';
             document.getElementById('p-qtd').value = '';
-            document.getElementById('p-min').value = '';
+            document.getElementById('p-sis').value = '';
         }
 
         async function lancar(tipo) {
             const cod = document.getElementById('p-cod').value;
             const nome = document.getElementById('p-nome').value;
-            const qtd = parseInt(document.getElementById('p-qtd').value);
-            const min = parseInt(document.getElementById('p-min').value) || 0;
-            const ex = estoque.find(x => x.cod == cod);
-            let total = (ex) ? ex.qtd + qtd : qtd;
-            await fetch(`${API}/estoque`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod, nome, qtd: total, min}) });
+            const qtd = parseInt(document.getElementById('p-qtd').value) || 0;
+            const sis = parseInt(document.getElementById('p-sis').value) || 0;
+            if(!cod || !nome) return alert("Preencha Cód e Nome!");
+            await fetch(`${API}/estoque`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod, nome, qtd, qtd_sistema: sis}) });
             await fetch(`${API}/historico`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod, nome, qtd, tipo_mov: tipo, usuario: userAtivo.u}) });
             carregar();
+            limparCampos();
         }
 
         async function importarMassa(input) {
             const r = new FileReader();
             r.onload = async (e) => {
                 const wb = XLSX.read(new Uint8Array(e.target.result), {type: 'array'});
-                const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: ["cod", "nome", "qtd", "min"], range: 1});
-                for(const f of rows) { if(f.cod) await fetch(`${API}/estoque`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod: f.cod.toString(), nome: f.nome, qtd: parseInt(f.qtd), min: parseInt(f.min) || 0}) }); }
-                carregar(); alert("Importado!");
+                const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: ["cod", "nome", "qtd", "qtd_sistema"], range: 1});
+                for(const f of rows) { 
+                    if(f.cod) await fetch(`${API}/estoque`, { 
+                        method: 'POST', 
+                        headers: {'Content-Type': 'application/json'}, 
+                        body: JSON.stringify({
+                            cod: f.cod.toString(), 
+                            nome: f.nome, 
+                            qtd: parseInt(f.qtd) || 0, 
+                            qtd_sistema: parseInt(f.qtd_sistema) || 0
+                        }) 
+                    }); 
+                }
+                carregar(); alert("Importação concluída!");
             };
             r.readAsArrayBuffer(input.files[0]);
         }
@@ -304,7 +321,7 @@
 
         function buscaAuto(c) {
             const p = estoque.find(x => x.cod == c.trim());
-            if(p) { document.getElementById('p-nome').value = p.nome; document.getElementById('p-min').value = p.min; }
+            if(p) { document.getElementById('p-nome').value = p.nome; document.getElementById('p-qtd').value = p.qtd; document.getElementById('p-sis').value = p.qtd_sistema; }
         }
 
         function filtrarLista(v) {
