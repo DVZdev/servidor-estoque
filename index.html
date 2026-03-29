@@ -222,19 +222,33 @@
             let resumo = "PRODUTOS RETIRADOS:\n\n";
             const agora = new Date().toLocaleString('pt-BR');
 
+            document.getElementById('modal-progresso').classList.remove('hidden');
+            document.getElementById('txt-progresso').innerText = "Processando Pedido...";
+
             for(let i of carrinho) {
                 const ex = estoque.find(x => x.cod == i.cod);
                 const novaQtd = (ex.qtd || 0) - i.qtd;
                 resumo += `• [${i.cod}] ${i.nome} - Qtd: ${i.qtd}\n`;
                 
                 await fetch(`${API}/estoque`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({...ex, qtd: novaQtd}) });
-                await fetch(`${API}/historico`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod: i.cod, nome: i.nome, qtd: i.qtd, tipo_mov: 'SAÍDA', usuario: userAtivo.u}) });
+                
+                // REGISTRO INDIVIDUAL NO HISTÓRICO COM NOME E CÓDIGO
+                await fetch(`${API}/historico`, { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({
+                        cod: i.cod, 
+                        nome: i.nome, 
+                        qtd: i.qtd, 
+                        tipo_mov: 'SAÍDA (PEDIDO)', 
+                        usuario: userAtivo.u
+                    }) 
+                });
             }
 
-            // Alerta de Saída
+            document.getElementById('modal-progresso').classList.add('hidden');
             alert(resumo);
 
-            // Gerar PDF
             const { jsPDF } = window.jspdf; const doc = new jsPDF();
             doc.setFontSize(18); doc.text("MYMEDIA SAÍDA", 15, 20);
             doc.setFontSize(10); doc.text(`Data/Hora: ${agora}`, 15, 28);
