@@ -24,125 +24,100 @@
         body { margin: 0; padding: 0; background-color: #0f172a; }
         .hidden { display: none !important; }
 
+        /* LOGIN */
         #tela-login {
             position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
             background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.7)), 
                         url('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=2000&auto=format&fit=crop') no-repeat center center;
             background-size: cover; z-index: 10000;
         }
-
         .login-card {
             background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
             border: 1px solid rgba(255, 255, 255, 0.1); padding: 40px; border-radius: 32px;
-            width: 100%; max-width: 400px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            width: 100%; max-width: 400px; text-align: center;
         }
+        .login-card input { width: 100%; padding: 15px; margin-bottom: 12px; border-radius: 14px; border: none; outline: none; }
 
-        .login-card input { 
-            width: 100%; padding: 15px; margin-bottom: 12px; border-radius: 14px;
-            border: none; background: rgba(255, 255, 255, 0.9); outline: none;
-        }
+        /* PAINEL */
+        #painel.ativo { min-height: 100vh; background: linear-gradient(rgba(15, 23, 42, 0.7), rgba(15, 23, 42, 0.7)), url('https://images.unsplash.com/photo-1553413077-190dd305871c?q=80&w=2000&auto=format&fit=crop') no-repeat center center fixed; background-size: cover; padding: 20px; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        .header-nav { display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.95); padding: 15px 25px; border-radius: 20px; margin-bottom: 25px; }
+        .card-principal { background: rgba(255, 255, 255, 0.98); border-radius: 24px; padding: 25px; min-height: 60vh; }
 
-        #painel.ativo {
-            min-height: 100vh;
-            background: linear-gradient(rgba(15, 23, 42, 0.6), rgba(15, 23, 42, 0.6)), 
-                        url('https://images.unsplash.com/photo-1553413077-190dd305871c?q=80&w=2000&auto=format&fit=crop') no-repeat center center fixed;
-            background-size: cover; padding: 20px;
-        }
-
-        .container { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
-        
-        .header-nav {
-            display: flex; justify-content: space-between; align-items: center;
-            background: rgba(255, 255, 255, 0.95); padding: 15px 25px; border-radius: 20px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); margin-bottom: 25px;
-        }
-
-        .card-principal {
-            background: rgba(255, 255, 255, 0.98); border-radius: 24px; padding: 25px;
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); border: 1px solid var(--border);
-        }
-
+        /* COMPONENTES */
         .btn { padding: 12px 20px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-success { background: var(--success); color: white; }
         .btn-ghost { background: #f1f5f9; color: var(--text-sub); }
-        .btn-clear { background: #fee2e2; color: var(--danger); font-size: 11px; padding: 8px 12px; }
+        .btn-clear { background: #fee2e2; color: var(--danger); }
         
         .item-produto { background: white; border: 1px solid var(--border); padding: 15px; border-radius: 16px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        
-        .grid-info { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; text-align: center; font-size: 12px; margin-top: 5px; color: var(--text-sub); border-top: 1px solid #f1f5f9; pt: 5px; }
+        .grid-info { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; text-align: center; font-size: 12px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #f1f5f9; }
         .dif-negativa { color: var(--danger); font-weight: bold; }
         .dif-positiva { color: var(--success); font-weight: bold; }
 
-        /* MODAL DE PROGRESSO */
-        #modal-progresso {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 20000;
-            display: flex; align-items: center; justify-content: center; flex-direction: column; color: white;
-        }
-        .progresso-container { width: 300px; height: 12px; background: #334155; border-radius: 6px; margin-top: 15px; overflow: hidden; }
-        #barra-preenchimento { width: 0%; height: 100%; background: var(--primary); transition: width 0.2s ease; }
-
-        .btn-excluir-item { color: var(--danger); font-weight: 800; cursor: pointer; border: none; background: none; padding: 5px 10px; font-size: 18px; }
-        .btn-editar-qtd { color: var(--primary); cursor: pointer; border: none; background: none; padding: 5px; font-size: 14px; margin-right: 5px; }
         #carrinho-area { background: #fff7ed; border: 2px dashed var(--primary); padding: 20px; border-radius: 20px; margin-bottom: 25px; }
+        .hist-item { background: #f8fafc; padding: 12px; border-radius: 12px; margin-bottom: 8px; font-size: 13px; border-left: 4px solid var(--primary); }
+
+        /* MODAL PROGRESSO */
+        #modal-progresso { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 20000; display: flex; align-items: center; justify-content: center; flex-direction: column; color: white; }
+        .progresso-container { width: 300px; height: 12px; background: #334155; border-radius: 6px; margin-top: 15px; overflow: hidden; }
+        #barra-preenchimento { width: 0%; height: 100%; background: var(--primary); transition: width 0.2s; }
     </style>
 </head>
 <body>
 
     <div id="modal-progresso" class="hidden">
-        <h3 id="status-import">Processando Inventário...</h3>
-        <div class="progresso-container">
-            <div id="barra-preenchimento"></div>
-        </div>
-        <p id="contagem-progresso" style="margin-top:10px; font-size:14px; font-weight: 600;">0 / 0 itens</p>
+        <h3>Processando Inventário...</h3>
+        <div class="progresso-container"><div id="barra-preenchimento"></div></div>
+        <p id="contagem-progresso" style="margin-top:10px;">0 / 0</p>
     </div>
 
     <div id="tela-login">
         <div class="login-card">
-            <h1 style="color:white; margin:0 0 5px 0;">MyMedia</h1>
-            <p style="color:white; opacity:0.8; margin-bottom:25px;">Expedição e Logística</p>
+            <h1 style="color:white; margin:0;">MyMedia</h1>
+            <p style="color:white; opacity:0.7; margin-bottom:20px;">Logística</p>
             <input type="text" id="user" placeholder="Usuário">
             <input type="password" id="pass" placeholder="Senha">
             <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="autenticar('login')">Entrar</button>
-            <button class="btn" style="background:none; color:white; font-size:12px; margin-top:10px; width:100%" onclick="autenticar('register')">Criar nova conta</button>
+            <button class="btn" style="background:none; color:white; font-size:12px; margin-top:10px; width:100%" onclick="autenticar('register')">Criar conta</button>
         </div>
     </div>
 
     <div id="painel" class="hidden">
         <div class="container">
             <div class="header-nav">
-                <div style="font-weight:800; color:var(--primary)">MYMEDIA</div>
+                <div style="font-weight:800; color:var(--primary); font-size:20px;">MYMEDIA</div>
                 <div style="display:flex; gap:10px">
                     <button class="btn btn-ghost" onclick="aba('estoque')">Estoque</button>
                     <button id="btn-hist-nav" class="btn btn-ghost hidden" onclick="aba('hist')">Histórico</button>
-                    <button class="btn" style="background:#fee2e2; color:var(--danger)" onclick="location.reload()">Sair</button>
+                    <button class="btn btn-clear" onclick="location.reload()">Sair</button>
                 </div>
             </div>
 
             <div class="card-principal">
                 <div id="aba-estoque">
                     <div id="carrinho-area" class="hidden">
-                        <h4 style="margin:0 0 10px 0; color:var(--primary)">🛒 Itens do Pedido</h4>
+                        <h4 style="margin:0 0 10px 0;">🛒 Itens do Pedido</h4>
                         <div id="lista-carrinho"></div>
                         <div style="margin-top:15px; display:flex; gap:10px">
-                            <button class="btn btn-success" onclick="finalizarPedido()">Finalizar e PDF</button>
-                            <button class="btn btn-ghost" onclick="limparCarrinho()">Cancelar</button>
+                            <button class="btn btn-success" onclick="finalizarPedido()">Finalizar e Gerar PDF</button>
+                            <button class="btn btn-ghost" onclick="limparCarrinho()">Limpar</button>
                         </div>
                     </div>
 
                     <div id="area-admin" class="hidden">
                         <div style="display:grid; grid-template-columns: 1fr 2fr 1fr 1fr; gap:10px; margin-bottom:15px;">
-                            <input type="text" id="p-cod" placeholder="Cód" style="padding:12px; border-radius:10px; border:1px solid #ddd" oninput="buscaAuto(this.value)">
-                            <input type="text" id="p-nome" placeholder="Produto" style="padding:12px; border-radius:10px; border:1px solid #ddd">
-                            <input type="number" id="p-qtd" placeholder="Qtd Armazém" style="padding:12px; border-radius:10px; border:1px solid #ddd">
-                            <input type="number" id="p-sis" placeholder="Qtd Sistema" style="padding:12px; border-radius:10px; border:1px solid #ddd">
+                            <input type="text" id="p-cod" placeholder="Cód" oninput="buscaAuto(this.value)" style="padding:10px; border-radius:8px; border:1px solid #ddd">
+                            <input type="text" id="p-nome" placeholder="Produto" style="padding:10px; border-radius:8px; border:1px solid #ddd">
+                            <input type="number" id="p-qtd" placeholder="Qtd Armazém" style="padding:10px; border-radius:8px; border:1px solid #ddd">
+                            <input type="number" id="p-sis" placeholder="Qtd Sistema" style="padding:10px; border-radius:8px; border:1px solid #ddd">
                         </div>
-                        <div style="display:flex; gap:10px; margin-bottom:25px; align-items: center; flex-wrap: wrap;">
+                        <div style="display:flex; gap:10px; margin-bottom:25px; flex-wrap: wrap;">
                             <button class="btn btn-success" onclick="lancar('ENTRADA')">Lançar/Atualizar</button>
-                            <button class="btn btn-primary" onclick="addAoCarrinho()">+ Pedido</button>
-                            <button class="btn btn-clear" onclick="limparCampos()">Limpar</button>
-                            <button class="btn btn-clear" style="background:#ef4444; color:white" onclick="limparEstoqueTotal()">Zerar Tudo</button>
-                            <label class="btn btn-ghost" style="font-size:12px">📥 Importar Excel <input type="file" style="display:none" onchange="importarMassa(this)"></label>
+                            <button class="btn btn-primary" onclick="addAoCarrinho()">+ Adicionar Pedido</button>
+                            <button class="btn btn-clear" onclick="limparEstoqueTotal()">Zerar Tudo</button>
+                            <label class="btn btn-ghost">📥 Importar Excel <input type="file" style="display:none" onchange="importarMassa(this)"></label>
                         </div>
                     </div>
 
@@ -151,7 +126,7 @@
                 </div>
 
                 <div id="aba-hist" class="hidden">
-                    <h3 style="margin-top:0">🕒 Histórico</h3>
+                    <h3 style="margin-top:0">🕒 Histórico de Movimentações</h3>
                     <div id="lista-hist-container"></div>
                 </div>
             </div>
@@ -165,7 +140,7 @@
         async function autenticar(modo) {
             const u = document.getElementById('user').value.trim();
             const p = document.getElementById('pass').value;
-            if(!u || !p) return alert("Preencha os campos!");
+            if(!u || !p) return alert("Preencha tudo!");
             const res = await fetch(`${API}/auth/${modo}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({u, p}) });
             if(res.ok) {
                 userAtivo = await res.json();
@@ -176,65 +151,87 @@
                     document.getElementById('btn-hist-nav').classList.remove('hidden');
                 }
                 carregar();
-            } else alert("Erro na autenticação.");
+            } else alert("Erro no acesso.");
         }
 
         async function carregar() {
             const res = await fetch(`${API}/estoque`);
             let dados = await res.json();
-            
-            // ORDENAR POR CÓDIGO (NUMÉRICO)
-            estoque = dados.sort((a, b) => {
-                return parseInt(a.cod) - parseInt(b.cod);
-            });
-            
+            estoque = dados.sort((a, b) => parseInt(a.cod) - parseInt(b.cod));
             renderLista();
         }
 
         function renderLista() {
             document.getElementById('corpo-estoque-lista').innerHTML = estoque.map(p => {
-                // Garante que o nome da propriedade seja compatível com o banco
-                const qtdSis = p.qtd_sistema || p.sis || 0; 
-                const diferenca = p.qtd - qtdSis;
-                const classeDif = diferenca < 0 ? 'dif-negativa' : (diferenca > 0 ? 'dif-positiva' : '');
-
+                const qtdS = p.qtd_sistema || 0;
+                const dif = p.qtd - qtdS;
                 return `
                 <div class="item-produto" data-busca="${p.cod} ${p.nome}">
-                    <div style="flex: 1;">
-                        <b style="font-size: 15px;">${p.nome}</b><br><small style="color:#64748b">ID: ${p.cod}</small>
+                    <div style="flex:1">
+                        <b>${p.nome}</b> <small style="color:var(--text-sub)">(ID: ${p.cod})</small>
                         <div class="grid-info">
-                            <div>📦 Armazém: <b>${p.qtd}</b></div>
-                            <div>💻 Sistema: <b>${qtdSis}</b></div>
-                            <div class="${classeDif}">⚖️ Dif: <b>${diferenca}</b></div>
+                            <div>Armazém: <b>${p.qtd}</b></div>
+                            <div>Sistema: <b>${qtdS}</b></div>
+                            <div class="${dif < 0 ? 'dif-negativa' : (dif > 0 ? 'dif-positiva' : '')}">Dif: <b>${dif}</b></div>
                         </div>
                     </div>
-                    <div style="display:flex; align-items:center; gap:5px">
-                        ${userAtivo && userAtivo.isadmin ? `<button class="btn-editar-qtd" onclick="editarQtdRapido('${p.cod}', '${p.nome}', ${p.qtd}, ${qtdSis})">✏️</button>` : ''}
-                        ${userAtivo && userAtivo.isadmin ? `<button class="btn-excluir-item" onclick="excluirProduto('${p.cod}')">×</button>` : ''}
+                    <div style="display:flex; gap:5px">
+                        ${userAtivo.isadmin ? `<button style="background:none; border:none; cursor:pointer;" onclick="editarQtdRapido('${p.cod}','${p.nome}',${p.qtd},${qtdS})">✏️</button>` : ''}
+                        ${userAtivo.isadmin ? `<button style="background:none; border:none; cursor:pointer; color:red; font-weight:bold;" onclick="excluirProduto('${p.cod}')">×</button>` : ''}
                     </div>
-                </div>`
+                </div>`;
             }).join('');
         }
 
-        async function editarQtdRapido(cod, nome, qtdArm, qtdSis) {
-            const novaArm = prompt(`Novo valor ARMAZÉM para ${nome}:`, qtdArm);
-            if (novaArm === null) return;
-            const novaSis = prompt(`Novo valor SISTEMA para ${nome}:`, qtdSis);
-            if (novaSis === null) return;
-            await fetch(`${API}/estoque`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod, nome, qtd: parseInt(novaArm), qtd_sistema: parseInt(novaSis)}) });
+        async function editarQtdRapido(cod, nome, qA, qS) {
+            const nA = prompt(`Novo Armazém para ${nome}:`, qA); if(nA === null) return;
+            const nS = prompt(`Novo Sistema para ${nome}:`, qS); if(nS === null) return;
+            await fetch(`${API}/estoque`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod, nome, qtd: parseInt(nA), qtd_sistema: parseInt(nS)}) });
             carregar();
         }
 
         async function excluirProduto(cod) {
-            if(!confirm("Excluir produto definitivamente?")) return;
+            if(!confirm("Excluir?")) return;
             await fetch(`${API}/estoque/${cod}`, { method: 'DELETE' });
             carregar();
         }
 
         async function limparEstoqueTotal() {
-            if(!confirm("Zerar TODO o estoque?")) return;
+            if(!confirm("CUIDADO: Isso apagará TUDO!")) return;
             for(let p of estoque) await fetch(`${API}/estoque/${p.cod}`, { method: 'DELETE' });
             carregar();
+        }
+
+        function addAoCarrinho() {
+            const cod = document.getElementById('p-cod').value;
+            const qtd = parseInt(document.getElementById('p-qtd').value);
+            const p = estoque.find(x => x.cod == cod);
+            if(!p || isNaN(qtd)) return alert("Dados inválidos!");
+            carrinho.push({ cod: p.cod, nome: p.nome, qtd: qtd });
+            document.getElementById('carrinho-area').classList.remove('hidden');
+            renderCarrinho();
+        }
+
+        function renderCarrinho() {
+            document.getElementById('lista-carrinho').innerHTML = carrinho.map((item, i) => `
+                <div style="display:flex; justify-content:space-between; padding:5px; background:white; margin-bottom:2px; border-radius:5px;">
+                    <span>${item.nome} (x${item.qtd})</span>
+                    <button onclick="carrinho.splice(${i},1); renderCarrinho();" style="color:red; border:none; background:none;">✖</button>
+                </div>`).join('');
+            if(!carrinho.length) document.getElementById('carrinho-area').classList.add('hidden');
+        }
+
+        async function finalizarPedido() {
+            for(let i of carrinho) {
+                const ex = estoque.find(x => x.cod == i.cod);
+                await fetch(`${API}/estoque`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({...ex, qtd: ex.qtd - i.qtd}) });
+                await fetch(`${API}/historico`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod: i.cod, nome: i.nome, qtd: i.qtd, tipo_mov: 'SAÍDA', usuario: userAtivo.u}) });
+            }
+            const { jsPDF } = window.jspdf; const doc = new jsPDF();
+            doc.text("MYMEDIA - PEDIDO", 10, 10);
+            doc.autoTable({ head: [['Cód', 'Item', 'Qtd']], body: carrinho.map(x => [x.cod, x.nome, x.qtd]) });
+            doc.save(`pedido.pdf`);
+            carrinho = []; renderCarrinho(); carregar();
         }
 
         async function importarMassa(input) {
@@ -242,46 +239,19 @@
             r.onload = async (e) => {
                 const wb = XLSX.read(new Uint8Array(e.target.result), {type: 'array'});
                 const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: ["cod", "nome", "qtd", "qtd_sistema"], range: 1});
-                
-                const validRows = rows.filter(f => f.cod);
-                if(validRows.length === 0) return alert("Excel vazio ou colunas erradas!");
-
+                const validos = rows.filter(f => f.cod);
                 document.getElementById('modal-progresso').classList.remove('hidden');
-                const barra = document.getElementById('barra-preenchimento');
-                const contagem = document.getElementById('contagem-progresso');
-
-                let count = 0;
-                for(const f of validRows) { 
-                    await fetch(`${API}/estoque`, { 
-                        method: 'POST', 
-                        headers: {'Content-Type': 'application/json'}, 
-                        body: JSON.stringify({
-                            cod: f.cod.toString(), 
-                            nome: f.nome, 
-                            qtd: parseInt(f.qtd) || 0, 
-                            qtd_sistema: parseInt(f.qtd_sistema) || 0
-                        }) 
-                    }); 
-                    count++;
-                    barra.style.width = ((count / validRows.length) * 100) + "%";
-                    contagem.innerText = `${count} / ${validRows.length} itens salvos`;
+                let c = 0;
+                for(const f of validos) {
+                    await fetch(`${API}/estoque`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod: f.cod.toString(), nome: f.nome, qtd: parseInt(f.qtd)||0, qtd_sistema: parseInt(f.qtd_sistema)||0}) });
+                    c++;
+                    document.getElementById('barra-preenchimento').style.width = (c/validos.length*100) + "%";
+                    document.getElementById('contagem-progresso').innerText = `${c} / ${validos.length}`;
                 }
-                
-                setTimeout(() => {
-                    document.getElementById('modal-progresso').classList.add('hidden');
-                    carregar();
-                    alert("Inventário atualizado com sucesso!");
-                }, 500);
+                document.getElementById('modal-progresso').classList.add('hidden');
+                carregar(); alert("Importado!");
             };
             r.readAsArrayBuffer(input.files[0]);
-            input.value = "";
-        }
-
-        function limparCampos() {
-            document.getElementById('p-cod').value = '';
-            document.getElementById('p-nome').value = '';
-            document.getElementById('p-qtd').value = '';
-            document.getElementById('p-sis').value = '';
         }
 
         async function lancar(tipo) {
@@ -289,25 +259,35 @@
             const nome = document.getElementById('p-nome').value;
             const qtd = parseInt(document.getElementById('p-qtd').value) || 0;
             const sis = parseInt(document.getElementById('p-sis').value) || 0;
-            if(!cod || !nome) return alert("Preencha os campos!");
             await fetch(`${API}/estoque`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod, nome, qtd, qtd_sistema: sis}) });
-            carregar(); limparCampos();
+            await fetch(`${API}/historico`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod, nome, qtd, tipo_mov: tipo, usuario: userAtivo.u}) });
+            carregar();
         }
 
-        function aba(t) { 
-            document.getElementById('aba-estoque').classList.toggle('hidden', t !== 'estoque'); 
-            document.getElementById('aba-hist').classList.toggle('hidden', t !== 'hist'); 
+        function aba(t) {
+            document.getElementById('aba-estoque').classList.toggle('hidden', t !== 'estoque');
+            document.getElementById('aba-hist').classList.toggle('hidden', t !== 'hist');
+            if(t === 'hist') carregarHist();
+        }
+
+        async function carregarHist() {
+            const res = await fetch(`${API}/historico`);
+            const h = await res.json();
+            document.getElementById('lista-hist-container').innerHTML = h.reverse().map(x => `
+                <div class="hist-item"><b>${x.nome}</b> (${x.qtd}) - ${x.tipo_mov} <br><small>${new Date(x.data).toLocaleString()} por ${x.usuario}</small></div>`).join('');
         }
 
         function buscaAuto(c) {
             const p = estoque.find(x => x.cod == c.trim());
-            if(p) { document.getElementById('p-nome').value = p.nome; document.getElementById('p-qtd').value = p.qtd; document.getElementById('p-sis').value = p.qtd_sistema || p.sis; }
+            if(p) { document.getElementById('p-nome').value = p.nome; document.getElementById('p-qtd').value = p.qtd; document.getElementById('p-sis').value = p.qtd_sistema || 0; }
         }
 
         function filtrarLista(v) {
             const t = v.toLowerCase();
             document.querySelectorAll('.item-produto').forEach(el => el.style.display = el.getAttribute('data-busca').toLowerCase().includes(t) ? "flex" : "none");
         }
+        
+        function limparCarrinho() { carrinho = []; renderCarrinho(); }
     </script>
 </body>
 </html>
