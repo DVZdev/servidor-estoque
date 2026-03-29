@@ -70,32 +70,31 @@
         
         .item-produto { background: white; border: 1px solid var(--border); padding: 15px; border-radius: 16px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
         
-        .grid-info { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; text-align: center; font-size: 12px; margin-top: 5px; color: var(--text-sub); }
+        .grid-info { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; text-align: center; font-size: 12px; margin-top: 5px; color: var(--text-sub); border-top: 1px solid #f1f5f9; pt: 5px; }
         .dif-negativa { color: var(--danger); font-weight: bold; }
         .dif-positiva { color: var(--success); font-weight: bold; }
 
-        /* ESTILO DA BARRA DE PROGRESSO */
+        /* MODAL DE PROGRESSO */
         #modal-progresso {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 20000;
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 20000;
             display: flex; align-items: center; justify-content: center; flex-direction: column; color: white;
         }
-        .progresso-container { width: 300px; height: 10px; background: #334155; border-radius: 5px; margin-top: 15px; overflow: hidden; }
-        #barra-preenchimento { width: 0%; height: 100%; background: var(--primary); transition: width 0.3s ease; }
+        .progresso-container { width: 300px; height: 12px; background: #334155; border-radius: 6px; margin-top: 15px; overflow: hidden; }
+        #barra-preenchimento { width: 0%; height: 100%; background: var(--primary); transition: width 0.2s ease; }
 
         .btn-excluir-item { color: var(--danger); font-weight: 800; cursor: pointer; border: none; background: none; padding: 5px 10px; font-size: 18px; }
         .btn-editar-qtd { color: var(--primary); cursor: pointer; border: none; background: none; padding: 5px; font-size: 14px; margin-right: 5px; }
         #carrinho-area { background: #fff7ed; border: 2px dashed var(--primary); padding: 20px; border-radius: 20px; margin-bottom: 25px; }
-        .hist-item { background: #f8fafc; padding: 12px; border-radius: 12px; margin-bottom: 8px; font-size: 13px; border-left: 4px solid var(--primary); }
     </style>
 </head>
 <body>
 
     <div id="modal-progresso" class="hidden">
-        <h3 id="status-import">Importando dados...</h3>
+        <h3 id="status-import">Processando Inventário...</h3>
         <div class="progresso-container">
             <div id="barra-preenchimento"></div>
         </div>
-        <p id="contagem-progresso" style="margin-top:10px; font-size:14px;">0 / 0</p>
+        <p id="contagem-progresso" style="margin-top:10px; font-size:14px; font-weight: 600;">0 / 0 itens</p>
     </div>
 
     <div id="tela-login">
@@ -140,19 +139,19 @@
                         </div>
                         <div style="display:flex; gap:10px; margin-bottom:25px; align-items: center; flex-wrap: wrap;">
                             <button class="btn btn-success" onclick="lancar('ENTRADA')">Lançar/Atualizar</button>
-                            <button class="btn btn-primary" onclick="addAoCarrinho()">+ Adicionar ao Pedido</button>
-                            <button class="btn btn-clear" onclick="limparCampos()">Limpar Campos</button>
-                            <button class="btn btn-clear" style="background:#ef4444; color:white" onclick="limparEstoqueTotal()">Limpar Todo Estoque</button>
-                            <label class="btn btn-ghost" style="font-size:12px">📥 Excel <input type="file" style="display:none" onchange="importarMassa(this)"></label>
+                            <button class="btn btn-primary" onclick="addAoCarrinho()">+ Pedido</button>
+                            <button class="btn btn-clear" onclick="limparCampos()">Limpar</button>
+                            <button class="btn btn-clear" style="background:#ef4444; color:white" onclick="limparEstoqueTotal()">Zerar Tudo</button>
+                            <label class="btn btn-ghost" style="font-size:12px">📥 Importar Excel <input type="file" style="display:none" onchange="importarMassa(this)"></label>
                         </div>
                     </div>
 
-                    <input type="text" placeholder="🔍 Pesquisar no estoque..." style="width:100%; padding:15px; border-radius:15px; border:1px solid #eee; margin-bottom:20px;" onkeyup="filtrarLista(this.value)">
+                    <input type="text" placeholder="🔍 Pesquisar por código ou nome..." style="width:100%; padding:15px; border-radius:15px; border:1px solid #eee; margin-bottom:20px;" onkeyup="filtrarLista(this.value)">
                     <div id="corpo-estoque-lista"></div>
                 </div>
 
                 <div id="aba-hist" class="hidden">
-                    <h3 style="margin-top:0">🕒 Histórico de Movimentações</h3>
+                    <h3 style="margin-top:0">🕒 Histórico</h3>
                     <div id="lista-hist-container"></div>
                 </div>
             </div>
@@ -169,11 +168,9 @@
             if(!u || !p) return alert("Preencha os campos!");
             const res = await fetch(`${API}/auth/${modo}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({u, p}) });
             if(res.ok) {
-                if(modo === 'register') return alert("Registrado! Faça login.");
                 userAtivo = await res.json();
                 document.getElementById('tela-login').classList.add('hidden');
-                document.getElementById('painel').classList.remove('hidden');
-                document.getElementById('painel').classList.add('ativo');
+                document.getElementById('painel').classList.remove('hidden').classList.add('ativo');
                 if(userAtivo.isadmin) {
                     document.getElementById('area-admin').classList.remove('hidden');
                     document.getElementById('btn-hist-nav').classList.remove('hidden');
@@ -184,26 +181,34 @@
 
         async function carregar() {
             const res = await fetch(`${API}/estoque`);
-            estoque = await res.json();
+            let dados = await res.json();
+            
+            // ORDENAR POR CÓDIGO (NUMÉRICO)
+            estoque = dados.sort((a, b) => {
+                return parseInt(a.cod) - parseInt(b.cod);
+            });
+            
             renderLista();
         }
 
         function renderLista() {
             document.getElementById('corpo-estoque-lista').innerHTML = estoque.map(p => {
-                const qtdSis = p.qtd_sistema || 0;
+                // Garante que o nome da propriedade seja compatível com o banco
+                const qtdSis = p.qtd_sistema || p.sis || 0; 
                 const diferenca = p.qtd - qtdSis;
                 const classeDif = diferenca < 0 ? 'dif-negativa' : (diferenca > 0 ? 'dif-positiva' : '');
+
                 return `
                 <div class="item-produto" data-busca="${p.cod} ${p.nome}">
                     <div style="flex: 1;">
-                        <b>${p.nome}</b><br><small>COD: ${p.cod}</small>
+                        <b style="font-size: 15px;">${p.nome}</b><br><small style="color:#64748b">ID: ${p.cod}</small>
                         <div class="grid-info">
-                            <div>Armazém: <b>${p.qtd}</b></div>
-                            <div>Sistema: <b>${qtdSis}</b></div>
-                            <div class="${classeDif}">Dif: <b>${diferenca}</b></div>
+                            <div>📦 Armazém: <b>${p.qtd}</b></div>
+                            <div>💻 Sistema: <b>${qtdSis}</b></div>
+                            <div class="${classeDif}">⚖️ Dif: <b>${diferenca}</b></div>
                         </div>
                     </div>
-                    <div style="display:flex; align-items:center; gap:10px">
+                    <div style="display:flex; align-items:center; gap:5px">
                         ${userAtivo && userAtivo.isadmin ? `<button class="btn-editar-qtd" onclick="editarQtdRapido('${p.cod}', '${p.nome}', ${p.qtd}, ${qtdSis})">✏️</button>` : ''}
                         ${userAtivo && userAtivo.isadmin ? `<button class="btn-excluir-item" onclick="excluirProduto('${p.cod}')">×</button>` : ''}
                     </div>
@@ -212,9 +217,9 @@
         }
 
         async function editarQtdRapido(cod, nome, qtdArm, qtdSis) {
-            const novaArm = prompt(`Novo ARMAZÉM para ${nome}:`, qtdArm);
+            const novaArm = prompt(`Novo valor ARMAZÉM para ${nome}:`, qtdArm);
             if (novaArm === null) return;
-            const novaSis = prompt(`Novo SISTEMA para ${nome}:`, qtdSis);
+            const novaSis = prompt(`Novo valor SISTEMA para ${nome}:`, qtdSis);
             if (novaSis === null) return;
             await fetch(`${API}/estoque`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod, nome, qtd: parseInt(novaArm), qtd_sistema: parseInt(novaSis)}) });
             carregar();
@@ -227,41 +232,49 @@
         }
 
         async function limparEstoqueTotal() {
-            if(!confirm("CUIDADO: Apagar TODO o estoque?")) return;
+            if(!confirm("Zerar TODO o estoque?")) return;
             for(let p of estoque) await fetch(`${API}/estoque/${p.cod}`, { method: 'DELETE' });
             carregar();
         }
 
-        function addAoCarrinho() {
-            const cod = document.getElementById('p-cod').value;
-            const qtd = parseInt(document.getElementById('p-qtd').value);
-            const p = estoque.find(x => x.cod == cod);
-            if(!p || isNaN(qtd) || qtd > p.qtd) return alert("Erro no estoque!");
-            carrinho.push({ cod: p.cod, nome: p.nome, qtd: qtd });
-            document.getElementById('carrinho-area').classList.remove('hidden');
-            renderCarrinho();
-        }
+        async function importarMassa(input) {
+            const r = new FileReader();
+            r.onload = async (e) => {
+                const wb = XLSX.read(new Uint8Array(e.target.result), {type: 'array'});
+                const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: ["cod", "nome", "qtd", "qtd_sistema"], range: 1});
+                
+                const validRows = rows.filter(f => f.cod);
+                if(validRows.length === 0) return alert("Excel vazio ou colunas erradas!");
 
-        function renderCarrinho() {
-            document.getElementById('lista-carrinho').innerHTML = carrinho.map((item, i) => `
-                <div style="display:flex; justify-content:space-between; padding:8px; background:white; border-radius:10px; margin-bottom:5px; font-size:13px;">
-                    <span>${item.nome} (x${item.qtd})</span>
-                    <button onclick="carrinho.splice(${i},1); renderCarrinho();" style="color:red; border:none; background:none;">✖</button>
-                </div>`).join('');
-            if(carrinho.length === 0) document.getElementById('carrinho-area').classList.add('hidden');
-        }
+                document.getElementById('modal-progresso').classList.remove('hidden');
+                const barra = document.getElementById('barra-preenchimento');
+                const contagem = document.getElementById('contagem-progresso');
 
-        async function finalizarPedido() {
-            for(let item of carrinho) {
-                const ex = estoque.find(x => x.cod == item.cod);
-                await fetch(`${API}/estoque`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({...ex, qtd: ex.qtd - item.qtd}) });
-                await fetch(`${API}/historico`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod: item.cod, nome: item.nome, qtd: item.qtd, tipo_mov: 'SAÍDA', usuario: userAtivo.u}) });
-            }
-            const { jsPDF } = window.jspdf; const doc = new jsPDF();
-            doc.text("PEDIDO MYMEDIA", 15, 20);
-            doc.autoTable({ head: [['Cód', 'Produto', 'Qtd']], body: carrinho.map(i => [i.cod, i.nome, i.qtd]), startY: 25 });
-            doc.save(`pedido_${Date.now()}.pdf`);
-            carrinho = []; renderCarrinho(); carregar();
+                let count = 0;
+                for(const f of validRows) { 
+                    await fetch(`${API}/estoque`, { 
+                        method: 'POST', 
+                        headers: {'Content-Type': 'application/json'}, 
+                        body: JSON.stringify({
+                            cod: f.cod.toString(), 
+                            nome: f.nome, 
+                            qtd: parseInt(f.qtd) || 0, 
+                            qtd_sistema: parseInt(f.qtd_sistema) || 0
+                        }) 
+                    }); 
+                    count++;
+                    barra.style.width = ((count / validRows.length) * 100) + "%";
+                    contagem.innerText = `${count} / ${validRows.length} itens salvos`;
+                }
+                
+                setTimeout(() => {
+                    document.getElementById('modal-progresso').classList.add('hidden');
+                    carregar();
+                    alert("Inventário atualizado com sucesso!");
+                }, 500);
+            };
+            r.readAsArrayBuffer(input.files[0]);
+            input.value = "";
         }
 
         function limparCampos() {
@@ -276,77 +289,19 @@
             const nome = document.getElementById('p-nome').value;
             const qtd = parseInt(document.getElementById('p-qtd').value) || 0;
             const sis = parseInt(document.getElementById('p-sis').value) || 0;
-            if(!cod || !nome) return alert("Preencha Cód e Nome!");
+            if(!cod || !nome) return alert("Preencha os campos!");
             await fetch(`${API}/estoque`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod, nome, qtd, qtd_sistema: sis}) });
-            await fetch(`${API}/historico`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cod, nome, qtd, tipo_mov: tipo, usuario: userAtivo.u}) });
             carregar(); limparCampos();
-        }
-
-        /* LOGICA DE IMPORTAÇÃO COM BARRA DE PROGRESSO */
-        async function importarMassa(input) {
-            const r = new FileReader();
-            r.onload = async (e) => {
-                const wb = XLSX.read(new Uint8Array(e.target.result), {type: 'array'});
-                const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: ["cod", "nome", "qtd", "qtd_sistema"], range: 1});
-                
-                const total = rows.filter(f => f.cod).length;
-                if(total === 0) return alert("Nenhum dado válido encontrado no Excel.");
-
-                // Mostrar Modal
-                document.getElementById('modal-progresso').classList.remove('hidden');
-                const barra = document.getElementById('barra-preenchimento');
-                const contagem = document.getElementById('contagem-progresso');
-
-                let processados = 0;
-                for(const f of rows) { 
-                    if(f.cod) {
-                        await fetch(`${API}/estoque`, { 
-                            method: 'POST', 
-                            headers: {'Content-Type': 'application/json'}, 
-                            body: JSON.stringify({
-                                cod: f.cod.toString(), 
-                                nome: f.nome, 
-                                qtd: parseInt(f.qtd) || 0, 
-                                qtd_sistema: parseInt(f.qtd_sistema) || 0
-                            }) 
-                        }); 
-                        processados++;
-                        let perc = (processados / total) * 100;
-                        barra.style.width = perc + "%";
-                        contagem.innerText = `${processados} / ${total} itens salvos`;
-                    }
-                }
-                
-                setTimeout(() => {
-                    document.getElementById('modal-progresso').classList.add('hidden');
-                    barra.style.width = "0%";
-                    carregar();
-                    alert("Importação concluída com sucesso!");
-                }, 500);
-            };
-            r.readAsArrayBuffer(input.files[0]);
-            input.value = ""; // Limpa o input para permitir subir o mesmo arquivo se necessário
         }
 
         function aba(t) { 
             document.getElementById('aba-estoque').classList.toggle('hidden', t !== 'estoque'); 
             document.getElementById('aba-hist').classList.toggle('hidden', t !== 'hist'); 
-            if(t === 'hist') carregarHist(); 
-        }
-
-        async function carregarHist() {
-            const res = await fetch(`${API}/historico`);
-            const h = await res.json();
-            document.getElementById('lista-hist-container').innerHTML = h.reverse().map(x => `
-                <div class="hist-item">
-                    <b>${x.nome}</b> (${x.qtd}) - <b>${x.tipo_mov}</b><br>
-                    <small>${new Date(x.data).toLocaleString()} por ${x.usuario}</small>
-                </div>`).join('');
         }
 
         function buscaAuto(c) {
             const p = estoque.find(x => x.cod == c.trim());
-            if(p) { document.getElementById('p-nome').value = p.nome; document.getElementById('p-qtd').value = p.qtd; document.getElementById('p-sis').value = p.qtd_sistema; }
+            if(p) { document.getElementById('p-nome').value = p.nome; document.getElementById('p-qtd').value = p.qtd; document.getElementById('p-sis').value = p.qtd_sistema || p.sis; }
         }
 
         function filtrarLista(v) {
