@@ -173,18 +173,69 @@
 
         // IMPORTAR EXCEL (CORREÇÃO DEFINITIVA DO CAMPO SISTEMA)
         async function importarMassa(input) {
-            const r = new FileReader();
-            r.onload = async (e) => {
-                const wb = XLSX.read(new Uint8Array(e.target.result), {type: 'array'});
-                const sheet = wb.Sheets[wb.SheetNames[0]];
-                const rows = XLSX.utils.sheet_to_json(sheet);
-                if(!rows.length) return alert("Excel vazio!");
+    const r = new FileReader();
+    r.onload = async (e) => {
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, {type: 'array'});
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        
+        // Converte para matriz (array de arrays) para ignorar nomes de colunas e usar a posição
+        const rows = XLSX.utils.sheet_to_json(sheet, {header: 1}); 
+        if(rows.length < 2) return alert("Planilha vazia ou sem dados!");
 
-                document.getElementById('txt-progresso').innerText = "Sincronizando Excel...";
-                document.getElementById('modal-progresso').classList.remove('hidden');
+        document.getElementById('txt-progresso').innerText = "Sincronizando via Posição...";
+        document.getElementById('modal-progresso').classList.remove('hidden');
+        
+        let totalSinc = 0;
+
+        // Começa do 1 para pular o cabeçalho
+        for(let i = 1; i < rows.length; i++) {
+            const linha = rows[i];
+            
+            // Pega os dados pela POSIÇÃO da coluna (A=0, B=1, C=2, D=3)
+            const vCod = linha[0]; // Coluna A
+            const vNom = linha[1]; // Coluna B
+            const vArm = linha[2]; // Coluna C
+            const vSis = linha[3]; // Coluna D (SISTEMA)
+
+            if(vCod !== undefined && vCod !== null && vCod !== "") {
+                await fetch(`${API}/estoque`, { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({ 
+                        cod: vCod.toString().trim(), 
+                        nome: (vNom || "Sem Descrição").toString(), 
+                        qtd: parseInt(vArm) || 0, 
+                        qtd_sistema: parseInt(vSis) || 0 
+                    }) 
+                });
+                totalSinc++;
                 
-                let totalSinc = 0;
-                for(let f of rows) {
+                // Atualiza a barra visual
+                let p = Math.round((totalSinc / (rows.length - 1)) * 100);
+                document.getElementById('barra-preenchimento').style.width = p + "%";
+                document.getElementById('contagem-progresso').innerText = `${totalSinc} de ${rows.length - 1}`;
+            }
+        }
+        
+        await fetch(`${API}/historico`, { 
+            method: 'POST', 
+            headers: {'Content-Type': 'application/json'}, 
+            body: JSON.stringify({
+                nome: "Importação por Posição", 
+                qtd: totalSinc, 
+                tipo_mov: 'SINC', 
+                usuario: userAtivo.u
+            }) 
+        });
+
+        document.getElementById('modal-progresso').classList.add('hidden');
+        carregar(); 
+        alert("Importação concluída! Verifique os valores agora.");
+    };
+    r.readAsArrayBuffer(input.files[0]);
+    input.value = "";
+}
                     // Limpeza de chaves para ignorar filtros do Excel
                     const fLimpo = {};
                     Object.keys(f).forEach(k => {
