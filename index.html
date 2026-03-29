@@ -27,27 +27,12 @@
             background-size: cover; min-height: 100vh;
         }
 
-        /* Estilo para o tradutor ficar discreto no topo */
-        #google_translate_element {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            z-index: 10001;
-        }
-
+        #google_translate_element { position: absolute; top: 10px; left: 10px; z-index: 10001; }
         .hidden { display: none !important; }
 
-        /* LOGIN */
-        #tela-login { 
-            position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; 
-            background: linear-gradient(rgba(15, 23, 42, 0.7), rgba(15, 23, 42, 0.7)), 
-                        url('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=2000&auto=format&fit=crop') no-repeat center center;
-            background-size: cover; z-index: 10000; 
-        }
         .login-card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); padding: 40px; border-radius: 32px; width: 400px; text-align: center; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
         .login-card input { width: 100%; padding: 15px; margin-bottom: 12px; border-radius: 12px; border: none; outline: none; background: white; }
 
-        /* PAINEL */
         .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
         .header-nav { display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.98); padding: 15px 25px; border-radius: 20px; margin-bottom: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
         .card-principal { background: rgba(255, 255, 255, 0.98); border-radius: 24px; padding: 25px; min-height: 500px; box-shadow: 0 15px 35px rgba(0,0,0,0.4); }
@@ -227,57 +212,47 @@
         }
 
         async function limparEstoqueTotal() {
-            if(!confirm("⚠️ DESEJA ZERAR TUDO?")) return;
+            if(!confirm("⚠️ DESEJA ZERAR TODO O ESTOQUE?")) return;
             document.getElementById('modal-progresso').classList.remove('hidden');
-            for(let p of estoque) { await fetch(`${API}/estoque/${p.cod}`, { method: 'DELETE' }); }
+            document.getElementById('txt-progresso').innerText = "Limpando Banco...";
+            
+            let total = estoque.length;
+            let count = 0;
+
+            for(let p of estoque) { 
+                await fetch(`${API}/estoque/${p.cod}`, { method: 'DELETE' }); 
+                count++;
+                document.getElementById('barra-preenchimento').style.width = (count / total * 100) + "%";
+                // Pequena pausa para o servidor respirar
+                await new Promise(r => setTimeout(r, 50));
+            }
+            
             document.getElementById('modal-progresso').classList.add('hidden');
             carregar();
+            alert("Estoque Zerado com Sucesso!");
         }
 
         async function finalizarPedido() {
             if(!carrinho.length) return;
-            let resumo = "PRODUTOS RETIRADOS:\n\n";
             const agora = new Date().toLocaleString('pt-BR');
-
             document.getElementById('modal-progresso').classList.remove('hidden');
-            document.getElementById('txt-progresso').innerText = "Processando Pedido...";
+            document.getElementById('txt-progresso').innerText = "Finalizando...";
 
             for(let i of carrinho) {
                 const ex = estoque.find(x => x.cod == i.cod);
                 const novaQtd = (ex.qtd || 0) - i.qtd;
-                resumo += `• [${i.cod}] ${i.nome} - Qtd: ${i.qtd}\n`;
-                
                 await fetch(`${API}/estoque`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({...ex, qtd: novaQtd}) });
-                
                 await fetch(`${API}/historico`, { 
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'}, 
-                    body: JSON.stringify({
-                        cod: i.cod, 
-                        nome: i.nome, 
-                        qtd: i.qtd, 
-                        tipo_mov: 'SAÍDA (PEDIDO)', 
-                        usuario: userAtivo.u
-                    }) 
+                    method: 'POST', headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({ cod: i.cod, nome: i.nome, qtd: i.qtd, tipo_mov: 'SAÍDA (PEDIDO)', usuario: userAtivo.u }) 
                 });
             }
 
             document.getElementById('modal-progresso').classList.add('hidden');
-            alert(resumo);
-
             const { jsPDF } = window.jspdf; const doc = new jsPDF();
-            doc.setFontSize(18); doc.text("MYMEDIA SAÍDA", 15, 20);
-            doc.setFontSize(10); doc.text(`Data/Hora: ${agora}`, 15, 28);
-            doc.text(`Responsável: ${userAtivo.u} (Sistema Davi Moura)`, 15, 33);
-            
-            doc.autoTable({ 
-                head: [['Código', 'Descrição do Produto', 'Qtd Retirada']], 
-                body: carrinho.map(x => [x.cod, x.nome, x.qtd]), 
-                startY: 40,
-                headStyles: { fillColor: [255, 102, 0] }
-            });
-
-            doc.save(`MYMEDIA_SAIDA_${Date.now()}.pdf`);
+            doc.text("MYMEDIA SAÍDA", 15, 20);
+            doc.autoTable({ head: [['Código', 'Produto', 'Qtd']], body: carrinho.map(x => [x.cod, x.nome, x.qtd]), startY: 30 });
+            doc.save(`Pedido_${Date.now()}.pdf`);
             carrinho = []; renderCarrinho(); carregar();
         }
 
@@ -285,20 +260,11 @@
             const res = await fetch(`${API}/historico`);
             let h = await res.json();
             h.sort((a, b) => new Date(b.data) - new Date(a.data));
-            document.getElementById('lista-hist-container').innerHTML = h.slice(0, 100).map(x => {
-                const dataFormatada = new Date(x.data).toLocaleString('pt-BR');
-                return `
+            document.getElementById('lista-hist-container').innerHTML = h.slice(0, 100).map(x => `
                 <div class="hist-item">
-                    <div>
-                        <span style="color:var(--primary); font-weight:800;">[${x.cod || 'N/A'}]</span> 
-                        <b style="margin-left:5px;">${x.nome}</b> 
-                        <span style="margin-left:10px; opacity:0.7;">Qtd: ${x.qtd} | Mov: <b>${x.tipo_mov}</b></span>
-                    </div>
-                    <div style="text-align:right; font-size:11px; opacity:0.6;">
-                        ${dataFormatada}<br><b>Davi Moura System - Por: ${x.usuario}</b>
-                    </div>
-                </div>`;
-            }).join('');
+                    <div>[${x.cod}] <b>${x.nome}</b> - Qtd: ${x.qtd} (${x.tipo_mov})</div>
+                    <div style="font-size:11px; opacity:0.6;">${new Date(x.data).toLocaleString('pt-BR')} - Por: ${x.usuario}</div>
+                </div>`).join('');
         }
 
         async function lancar() {
@@ -312,29 +278,21 @@
 
         function buscaAuto(c) { 
             const p = estoque.find(x => x.cod == c.trim()); 
-            if(p) { 
-                document.getElementById('p-nome').value = p.nome; 
-                document.getElementById('p-qtd').value = p.qtd; 
-                document.getElementById('p-sis').value = p.qtd_sistema || 0; 
-            } 
+            if(p) { document.getElementById('p-nome').value = p.nome; document.getElementById('p-qtd').value = p.qtd; document.getElementById('p-sis').value = p.qtd_sistema || 0; } 
         }
         
         function addAoCarrinho() {
             const cod = document.getElementById('p-cod').value;
             const qtd = parseInt(document.getElementById('p-qtd').value);
             const p = estoque.find(x => x.cod == cod);
-            if(!p || isNaN(qtd)) return alert("Selecione um produto válido.");
+            if(!p || isNaN(qtd)) return alert("Erro no produto.");
             carrinho.push({ cod: p.cod, nome: p.nome, qtd: qtd });
             document.getElementById('carrinho-area').classList.remove('hidden');
             renderCarrinho();
         }
 
         function renderCarrinho() {
-            document.getElementById('lista-carrinho').innerHTML = carrinho.map((item, i) => `
-                <div style="display:flex; justify-content:space-between; padding:8px; background:white; margin-bottom:5px; border-radius:10px; border:1px solid #eee">
-                    <span>${item.nome} (x${item.qtd})</span>
-                    <button onclick="carrinho.splice(${i},1); renderCarrinho();" style="color:red; border:none; background:none; cursor:pointer">✖</button>
-                </div>`).join('');
+            document.getElementById('lista-carrinho').innerHTML = carrinho.map((item, i) => `<div style="padding:5px; background:white; margin-bottom:5px; border-radius:5px">${item.nome} (${item.qtd}) <button onclick="carrinho.splice(${i},1); renderCarrinho();">x</button></div>`).join('');
             if(!carrinho.length) document.getElementById('carrinho-area').classList.add('hidden');
         }
 
@@ -346,15 +304,8 @@
         }
 
         async function excluirProduto(cod) { if(confirm("Excluir item?")) { await fetch(`${API}/estoque/${cod}`, { method: 'DELETE' }); carregar(); } }
-        function aba(t) { 
-            document.getElementById('aba-estoque').classList.toggle('hidden', t !== 'estoque'); 
-            document.getElementById('aba-hist').classList.toggle('hidden', t !== 'hist'); 
-            if(t === 'hist') carregarHist(); 
-        }
-        function filtrarLista(v) { 
-            const t = v.toLowerCase(); 
-            document.querySelectorAll('.item-produto').forEach(el => el.style.display = el.getAttribute('data-busca').toLowerCase().includes(t) ? "flex" : "none"); 
-        }
+        function aba(t) { document.getElementById('aba-estoque').classList.toggle('hidden', t !== 'estoque'); document.getElementById('aba-hist').classList.toggle('hidden', t !== 'hist'); if(t === 'hist') carregarHist(); }
+        function filtrarLista(v) { const t = v.toLowerCase(); document.querySelectorAll('.item-produto').forEach(el => el.style.display = el.getAttribute('data-busca').toLowerCase().includes(t) ? "flex" : "none"); }
         function limparCarrinho() { carrinho = []; renderCarrinho(); }
     </script>
 </body>
